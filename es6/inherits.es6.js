@@ -1,7 +1,4 @@
-/* eslint-disable no-new-object */
-/* eslint-disable no-proto */
-/* eslint-disable no-unused-expressions */
-/* eslint-disable no-unused-vars */
+/* eslint-disable */
 
 class Parent {
   constructor(name) {

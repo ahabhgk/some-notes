@@ -36,3 +36,25 @@ console.log(it1.next())
 console.log(it1.next())
 console.log(it1.next())
 console.log(it1.next())
+
+
+// Thunk 函数
+/**
+ * Thunk 函数的定义，它是"传名调用"的一种实现策略，用来替换某个表达式。
+ * 在 JavaScript 语言中，Thunk 函数替换的不是表达式，而是多参数函数，将其替换成单参数的版本，且只接受回调函数作为参数。
+ */
+const fs = require('fs')
+
+const thunkify = function (fn) {
+  return function (...args) {
+    return function (cb) {
+      args.push(cb)
+      return fn.apply(this.args)
+    }
+  }
+}
+const readFile = thunkify(fs.readFile)
+readFile('./some-file.ext')((err, data) => {
+  if (err) throw err
+  console.log(data)
+})

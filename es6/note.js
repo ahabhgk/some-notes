@@ -1,19 +1,4 @@
-/* eslint-disable strict */
-/* eslint-disable comma-dangle */
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable no-var */
-/* eslint-disable wrap-iife */
-/* eslint-disable vars-on-top */
-/* eslint-disable semi */
-/* eslint-disable quotes */
-/* eslint-disable semi-style */
-/* eslint-disable no-unused-expressions */
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-extend-native */
-/* eslint-disable prefer-arrow-callback */
-/* eslint-disable no-template-curly-in-string */
-/* eslint-disable no-eval */
-/* eslint-disable no-unused-vars */
+/* eslint-disable */
 
 // 解构
 const destrcturing = () => {

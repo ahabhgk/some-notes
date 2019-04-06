@@ -1,14 +1,4 @@
-/* eslint-disable comma-dangle */
-/* eslint-disable no-unused-vars */
-/* eslint-disable semi-style */
-/* eslint-disable semi */
-/* eslint-disable vars-on-top */
-/* eslint-disable wrap-iife */
-/* eslint-disable quotes */
-/* eslint-disable lines-around-directive */
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable no-var */
-/* eslint-disable strict */
+/* eslint-disable */
 
 "use strict";
 

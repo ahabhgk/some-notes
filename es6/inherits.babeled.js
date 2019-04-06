@@ -1,23 +1,4 @@
-/* eslint-disable operator-linebreak */
-/* eslint-disable prefer-template */
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-unused-expressions */
-/* eslint-disable curly */
-/* eslint-disable nonblock-statement-body-position */
-/* eslint-disable space-before-function-paren */
-/* eslint-disable no-use-before-define */
-/* eslint-disable no-proto */
-/* eslint-disable comma-dangle */
-/* eslint-disable no-unused-vars */
-/* eslint-disable semi-style */
-/* eslint-disable semi */
-/* eslint-disable vars-on-top */
-/* eslint-disable wrap-iife */
-/* eslint-disable quotes */
-/* eslint-disable lines-around-directive */
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable no-var */
-/* eslint-disable strict */
+/* eslint-disable */
 
 "use strict";
 
