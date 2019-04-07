@@ -132,12 +132,13 @@ function resolvePromise(promise2, x, resolve, reject) {
 
 
 /**
- * [注册fulfilled状态/rejected状态对应的回调函数]
+ * 注册fulfilled状态/rejected状态对应的回调函数
  * @param  {function} onFulfilled fulfilled 状态时 执行的函数
  * @param  {function} onRejected  rejected 状态时 执行的函数
  * @return {function} promise2    返回一个新的 promise 对象
  */
 Promise.prototype.then = function (onFulfilled, onRejected) {
+  // promise 穿透的实现
   // 2.2.1 Both onFulfilled and onRejected are optional arguments:
   // 2.2.1.1 If onFulfilled is not a function, it must be ignored.
   onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value
@@ -242,12 +243,13 @@ Promise.prototype.then = function (onFulfilled, onRejected) {
  */
 Promise.all = function(promises) {
   return new Promise((resolve, reject) => {
-      let done = gen(promises.length, resolve)
-      promises.forEach((promise, index) => {
-          promise.then((value) => {
-              done(index, value)
-          }, reject)
-      })
+    let done = gen(promises.length, resolve)
+    promises.forEach((promise, index) => {
+      // promise 数组传到外层 resolve
+      promise.then((value) => {
+        done(index, value)
+      }, reject)
+    })
   })
 }
 
@@ -277,7 +279,7 @@ Promise.race = function(promises) {
   });
 }
 
-Promise.prototype.catch = function (onRejected) {
+Promise.prototype.catch = function (onRejected) { // 利用 promise 穿透
   this.then(null, onRejected)
 }
 
