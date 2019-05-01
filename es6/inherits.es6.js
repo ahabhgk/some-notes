@@ -79,8 +79,10 @@ Object.icreate = function (prototype) {
 // es5 中的继承（寄生组合式继承）
 function Super() {}
 function Sub() {}
+
 Sub.prototype = Object.create(Super.prototype)
 Sub.prototype.constructor = Sub
 const sub = new Sub()
+
 console.log(sub.constructor)
 console.log(sub.__proto__.__proto__ === Super.prototype)

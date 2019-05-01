@@ -52,33 +52,6 @@ const newAPI = function () {
 }
 // newAPI()
 
-// reduce 模拟
-const fakeReduce = function () {
-  const arr = [1, 2, 3, 4]
-  Array.prototype.ireduce = function (reducer, initialVal) {
-    for (let i = 0; i < this.length; i++) {
-      initialVal = reducer(initialVal, this[i], i, this)
-    }
-    return initialVal
-  }
-  console.log(arr.ireduce((val, item) => val + item, 0))
-}
-// fakeReduce()
-
-// filter 模拟
-const fakeFilter = function () {
-  Array.prototype.ifilter = function (fn) {
-    const newArr = []
-    for (let i = 0; i < this.length; i++) {
-      const flag = fn(this[i])
-      // && 和 || 的执行
-      flag && newArr.push(this[i])
-    }
-  }
-}
-// fakeFilter()
-// find, findIndex, every, some...
-
 // 对象合并
 const objAssign = function () {
   // 浅拷贝
