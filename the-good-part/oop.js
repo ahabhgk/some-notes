@@ -25,6 +25,7 @@ console.log(global.value)
 // 3 函数调用
 // var op = obj.output() // 调用了 con，con 的 this 为 global
 // op() // 调用闭包返回的函数，btn.addEventListener('click', op) op 的 this 为 btn（闭包 return 的是一个 Function 实例）
+// 所以 () => {} 被设计为没有 this、arguments、new.target、原型、super、不能用 new 调用的 “non-methed function”
 // 4 构造器调用 new
 
 
