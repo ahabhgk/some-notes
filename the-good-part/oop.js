@@ -159,3 +159,55 @@ var Coolcat = function (name) {
 
 var myCoolcat = Coolcat('Bix')
 console.log(myCoolcat.getName())
+
+
+
+console.log('------------------------------es5 继承 Array、Date 等对象------------------------------')
+
+Object.setPrototypeOf = Object.setPrototypeOf || function(obj, proto) { // polyfill
+  obj.__proto__ = proto
+  return obj
+};
+
+// 寄生构造函数模式（es6 中 class extends 继承模拟）
+function SpArray() {
+  var that = new Array()
+  that.push.apply(that, arguments)
+  Object.setPrototypeOf(that, SpArray.prototype)
+  return that
+}
+
+Object.setPrototypeOf(SpArray.prototype, Array.prototype)
+
+SpArray.prototype.toPipedString = function () {
+  return this.join('|')
+}
+
+var sa = new SpArray(1, 2, 3)
+console.log(sa)
+console.log(sa.__proto__)
+console.log(sa.toPipedString())
+
+
+console.log('---es6 中---')
+class SpecArray extends Array {
+  constructor(...args) {
+    // this.tag = 'SpecArray'
+    // Must call super constructor in derived class before accessing 'this' or returning from derived constructor
+    super(...args)
+  }
+
+  toPipedString() {
+    return this.join('|')
+  }
+}
+
+const spa = new SpecArray(1, 2, 3)
+console.log(spa)
+console.log(spa.__proto__)
+console.log(spa.toPipedString())
+
+// es5 中寄生组合式继承与 es6 class extends 的区别
+// es5：先由子类（SubClass）构造出实例对象this
+// es6：先由父类（SuperClass）构造出实例对象this，这也是为什么必须先调用父类的super()方法（子类没有自己的this对象，需先由父类构造，与寄生构造函数模式一样）
+// babel 转译 es6 的继承是用的寄生组合式继承，所以继承 Array、Date 等时会报错
