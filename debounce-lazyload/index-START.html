@@ -100,10 +100,11 @@ function debounce(fn, wait = 20, immediate = true) {
   }
 }
 
+
+const lazyImgs = document.querySelectorAll('.lazy')
 if ('loading' in HTMLImageElement.prototype) {
   lazyImgs.forEach(img => img.src = img.dataset.src)
 } else {
-  const lazyImgs = document.querySelectorAll('.lazy')
   function loadImg() {
     lazyImgs.forEach((img) => {
       const showAt = img.offsetTop
