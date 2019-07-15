@@ -24,6 +24,47 @@ Array.prototype.ifilter = function (fn) {
   }
 }
 
+// some polyfill
+if (!Array.prototype.some) {
+  Array.prototype.some = function(fun/*, thisArg*/) {
+    'use strict';
+
+    if (this == null) {
+      throw new TypeError('Array.prototype.some called on null or undefined');
+    }
+
+    if (typeof fun !== 'function') {
+      throw new TypeError();
+    }
+
+    var array = Object(this);
+    var len = array.length >>> 0;
+
+    var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+    for (var index = 0; index < len; index++) {
+      if (index in array && fun.call(thisArg, array[index], index, array)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+}
+
+// 一般其他的遍历方法不能使用 break 和 continue，而 some 和 every 可以，相比之下 some 更简单，可读性更好
+const arr = [1, 2, 3, 4, 5, 6]
+let str = ''
+
+const ret = arr.some(n => {
+  if (n === 3) return false // 相当于 continue
+  if (n >= 5) return true // 相当于 break
+  str += n
+})
+
+console.log(str, arr, ret)
+
+
+
 // 数组就是对象，所以可以给一个数组实例添加方法
 var data = [1, 2, 3]
 function add(a, b) {
