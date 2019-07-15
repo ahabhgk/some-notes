@@ -25,9 +25,9 @@ function Promise(executor) {
     if (value instanceof Promise) {
       return value.then(resolve, reject)
     }
-    // 为什么 resolve 加setTimeout?
+    // 为什么 resolve 加 setTimeout?
     // 2.2.4 规范 onFulfilled 和 onRejected 只允许在 execution context 栈仅包含平台代码时运行.
-    // 注1 这里的平台代码指的是引擎、环境以及 promise 的实施代码。实践中要确保 onFulfilled 和 onRejected 方法异步执行，且应该在 then 方法被调用的那一轮事件循环之后的新执行栈中执行。
+    // 注 1 这里的平台代码指的是引擎、环境以及 promise 的实施代码。实践中要确保 onFulfilled 和 onRejected 方法异步执行，且应该在 then 方法被调用的那一轮事件循环之后的新执行栈中执行。
     setTimeout(function () {
       // 调用 resolve 回调对应 onFulfilled 函数
       if (self.state === PENDING) {
@@ -273,10 +273,10 @@ function gen(length, resolve) {
  */
 Promise.race = function(promises) {
   return new Promise((resolve, reject) => {
-      promises.forEach((promise) => {
-         promise.then(resolve, reject);
-      });
-  });
+    promises.forEach((promise) => {
+      promise.then(resolve, reject)
+    })
+  })
 }
 
 Promise.prototype.catch = function (onRejected) { // 利用 promise 穿透
@@ -285,14 +285,14 @@ Promise.prototype.catch = function (onRejected) { // 利用 promise 穿透
 
 Promise.resolve = function (value) {
   return new Promise(resolve => {
-      resolve(value);
-  });
+    resolve(value)
+  })
 }
 
 Promise.reject = function (reason) {
   return new Promise((resolve, reject) => {
-      reject(reason);
-  });
+    reject(reason)
+  })
 }
 
 /**
