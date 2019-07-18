@@ -4,8 +4,7 @@
  * 公有变量通过 state 对象暴露
  */
 
-const Person = spec => {
-  let { name, age } = spec
+const Person = ({ name, age }) => {
   const state = {
     name,
   }
@@ -23,8 +22,7 @@ const Person = spec => {
   )
 }
 
-const Superman = spec => {
-  let { name, age, power } = spec
+const Superman = ({ name, age, power }) => {
   const state = Object.assign(
     Person({ name, age }),
     { power },

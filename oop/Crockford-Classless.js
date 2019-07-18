@@ -26,8 +26,7 @@
  * Tom.meow = null; //TypeError: Cannot add property name, object is not extensible
  */
 
-const Person = spec => {
-  let { name, age } = spec
+const Person = ({ name, age }) => {
   const talk = () => {
     console.log(`Hello! My name is ${name}, I'm ${age} years.`)
   }
@@ -43,8 +42,7 @@ const Person = spec => {
   }
 }
 
-const Superman = spec => {
-  let { name, age, power } = spec
+const Superman = ({ name, age, power }) => {
   const laserAttack = () => {
     console.log(`Attack!!! (Attack power: ${power})`)
   }

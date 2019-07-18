@@ -43,8 +43,7 @@ const laserAttacker = state => ({
   laserAttack: () => console.log(`Attack!!! (Attack power: ${state.power})`),
 })
 
-const Person = spec => {
-  const { name, age } = spec
+const Person = ({ name, age }) => {
   const state = { name, age }
 
   return Object.assign(
@@ -54,8 +53,7 @@ const Person = spec => {
   )
 }
 
-const Superman = spec => {
-  const { name, age, power } = spec
+const Superman = ({ name, age, power }) => {
   const state = { name, age, power }
 
   return Object.assign(
