@@ -17,5 +17,6 @@
   "bugs": {
     "url": "https://github.com/ahabhgk/some-notes/issues"
   },
-  "homepage": "https://github.com/ahabhgk/some-notes#readme"
+  "homepage": "https://github.com/ahabhgk/some-notes#readme",
+  "dependencies": {}
 }
