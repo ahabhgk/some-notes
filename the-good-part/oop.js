@@ -164,21 +164,28 @@ console.log(myCoolcat.getName())
 
 
 console.log('------------------------------es5 继承 Array、Date 等对象------------------------------')
+// ref: https://segmentfault.com/a/1190000012841509
+// JavaScript 中的原生对象只能被自己的构造函数实例化
+// 例：JavaScript 的日期对象只能通过 JavaScript Date 作为构造函数来实例化
+// v8 引擎底层代码中有限制，如果调用对象的 [[Class]] 不是 Date，则抛出错误
+// 也就是说，要调用 Date 上方法的实例对象必须通过 Date 构造出来，否则不允许调用 Date 的方法
 
 Object.setPrototypeOf = Object.setPrototypeOf || function(obj, proto) { // polyfill
   obj.__proto__ = proto
   return obj
 };
+// __proto__ 并不是语言本身的特性，这是各大厂商具体实现时添加的私有属性，
+// 虽然目前很多现代浏览器的 JS 引擎中都提供了这个私有属性，但依旧不建议在生产中使用该属性，
+// 避免对环境产生依赖。生产环境中，可以使用 Object.getPrototypeOf、Object.setPrototypeOf...
 
 // 寄生构造函数模式（es6 中 class extends 继承模拟）
-function SpArray() {
-  var that = new Array()
-  that.push.apply(that, arguments)
-  Object.setPrototypeOf(that, SpArray.prototype)
+function SpArray(...args) {
+  var that = new Array(...args)
+  Object.setPrototypeOf(that, SpArray.prototype) // 修改实例 __proto__ 指向
   return that
 }
 
-Object.setPrototypeOf(SpArray.prototype, Array.prototype)
+Object.setPrototypeOf(SpArray.prototype, Array.prototype) // 继承 Array
 
 SpArray.prototype.toPipedString = function () {
   return this.join('|')
@@ -209,6 +216,6 @@ console.log(spa.__proto__)
 console.log(spa.toPipedString())
 
 // es5 中寄生组合式继承与 es6 class extends 的区别
-// es5：先由子类（SubClass）构造出实例对象this
-// es6：先由父类（SuperClass）构造出实例对象this，这也是为什么必须先调用父类的super()方法（子类没有自己的this对象，需先由父类构造，与寄生构造函数模式一样）
+// es5：先由子类（SubClass）构造出实例对象 this
+// es6：先由父类（SuperClass）构造出实例对象 this，这也是为什么必须先调用父类的 super() 方法（子类没有自己的 this 对象，需先由父类构造，与寄生构造函数模式一样）
 // babel 转译 es6 的继承是用的寄生组合式继承，所以继承 Array、Date 等时会报错
