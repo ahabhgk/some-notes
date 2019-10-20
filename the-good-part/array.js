@@ -63,6 +63,18 @@ const ret = arr.some(n => {
 
 console.log(str, arr, ret)
 
+// flat
+const arr = [1, [2, [3, [4, [5], 6]], 7], 8]
+
+Array.prototype.iflat = function iflat(depth = 1) {
+  return depth != 1
+    ? this.reduce(
+        (cur, next) => cur.concat(Array.isArray(next) ? next.iflat(depth - 1) : next),
+        [],
+      )
+    : this.reduce((cur, next) => cur.concat(next), [])
+}
+
 
 
 // 数组就是对象，所以可以给一个数组实例添加方法

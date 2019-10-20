@@ -279,4 +279,87 @@ CSS Modules 支持原生，更通用，更支持 BEM
 
 styled-components 是 JS，编程性更好，结合 React 超爽
 
+## 组件间通信
+
+> props (& context) down, events up
+
+Context 提供了一个无需为每层组件手动添加 props，就能在组件树间进行数据传递的方法
+
+Context 像一个全局变量一样，把所有状态作为全局变量中会导致混乱，在大部分情况下，并不推荐使用 context。比较好的场景是真正意义上的全局信息且不会更改，例如界面主题、用户信息等。
+
+### 没有嵌套关系的组件
+
+可通过发布订阅模式
+
+这里用 Node.js 中的 events 模块在浏览器上的实现
+
+```js
+// event.js
+// 实现单例
+import { EventEmitter } from 'events'
+export default new EventEmitter()
+```
+
+```jsx
+// Child.jsx
+import React from 'react'
+import emitter from 'event'
+
+export default class Child extends React.Component {
+  state = { count: 0 }
+
+  handleClick = () => this.setState({ count: this.state.count + 1 }, () => {
+    emitter.emit('increased', this.state.count)
+  })
+
+  render() {
+    return <div onClick={this.handleClick}>Child counter: {this.state.count}</div>
+  }
+}
+```
+
+```jsx
+// Bro.jsx
+import React from 'react'
+import emitter from 'event'
+
+export default class Bro extends React.Component {
+  state = { count: 0 }
+
+  componentDidMount() {
+    emitter.addListener('increased', count => this.setState({ count }))
+  }
+
+  componentWillUnmount() {
+    emitter.removeListener('increased')
+  }
+
+  render() {
+    return <div>Bro counter: {this.state.count}</div>
+  }
+}
+```
+
+```jsx
+// App.jsx
+import React from 'react'
+import Bro from './components/Bro.jsx'
+import Child from './components/Child.jsx'
+
+export default function App() {
+  return (
+    <div>
+      <Child />
+      <Bro />
+    </div>
+  )
+}
+```
+
+Pub/Sub 利用全局对象来保存事件，用广播的方式去处理事件。但这种模式带来的问题就是逻辑关系混乱
+
+跨级通信往往是反模式的典型案例。对于应用开发来说，应该尽力 避免仅仅通过例如 Pub/Sub 实现的设计思路，加入强依赖与约定来进一步梳理流程是更好的方法
+
+## 组件间抽象
+
 
