@@ -362,4 +362,315 @@ Pub/Sub 利用全局对象来保存事件，用广播的方式去处理事件。
 
 ## 组件间抽象
 
+### mixin
 
+mixin 是将模块混入到另一个模块中，C++ 等 OOP 语言都有一个强大但危险的**多重继承特性**，现代语言为了权衡利弊，都舍弃了多继承，只能多继承，但只用单继承有时会很不方便，所以 Java 引入了 interface，其他语言则引入了 mixin，方法虽然不同，但都是为创造一种类似多重继承的效果，事实上说它是组合更为贴切
+
+mixin 的问题：
+
+* 破坏了原有组件的封装：
+
+    混入方法的时候也会混入状态，使得组件中有一些“不可见”的状态需要我们维护；有时 mixin 会依赖其他 mixin，形成复杂的依赖链，使我们修改一个时也需要修改其他多个
+
+* 命名冲突
+
+* 增加复杂性：
+
+### 高阶组件
+
+hocFactory:: W: React.Component => E: React.Component
+
+#### 属性代理
+
+```jsx
+import React from 'react'
+import Child from './components/Child'
+
+const hocFactory = (WrappedComponent) => (
+  class extends React.Component {
+    render() {
+      return <WrappedComponent {...this.props} />
+    }
+  }
+)
+
+export default hocFactory(Child)
+```
+
+生命周期：
+
+hoc constructing -> constructing
+-> didMount -> hoc didMount
+-> didUpdate -> hoc didUpdate
+-> hoc willUnmount -> willUmnount
+
+嗯，非常合理，will 的都是 hoc 先，did 的都是 wrapped 先
+
+> HOC 为组件添加特性。自身不应该大幅改变约定。HOC 返回的组件与原组件应保持类似的接口。
+
+* **约定：将不相关的 props 传递给被包裹的组件**
+
+    HOC 应该透传与自身无关的 props
+
+    ```jsx
+    render() {
+      // 过滤掉非此 HOC 额外的 props，且不要进行透传
+      const { extraProp, ...passThroughProps } = this.props
+
+      // 将 props 注入到被包装的组件中。
+      // 通常为 state 的值或者实例方法。
+      const injectedProp = someStateOrInstanceMethod
+
+      // 将 props 传递给被包装组件
+      return (
+        <WrappedComponent
+          injectedProp={injectedProp}
+          {...passThroughProps}
+        />
+      )
+    }
+    ```
+
+    这种约定保证了 HOC 的灵活性以及可复用性
+
+* **约定：最大化可组合性**
+
+    用于 HOC 的签名都是 Component => Component，所以很容易进行 compose
+
+    ```jsx
+    // OK but not good...
+    const EnhancedComponent = withRouter(connect(commentSelector)(WrappedComponent))
+
+    // 使用函数式编程中的 compose
+    // compose(f, g, h) 等同于 (...args) => f(g(h(...args)))
+    // OK and very good...
+    const enhance = compose(
+      withRouter,
+      connect(commentSelector)
+    )
+    const EnhancedComponent = enhance(WrappedComponent)
+    ```
+
+* **约定：包装显示名称以便调试**
+
+    设置 displayName 以便调试
+
+    ```jsx
+    function withSubscription(WrappedComponent) {
+      return class WithSubscription extends React.Component {
+        static displayName = `WithSubscription(${getDisplayName(WrappedComponent)})`
+      }
+    }
+
+    function getDisplayName(WrappedComponent) {
+      // 高阶组件的 displayName
+      // || 非高阶组件的 name（class 组件构造函数的 name 和函数组件的 name）
+      // || 没有显示指定组件的 name
+      return WrappedComponent.displayName || WrappedComponent.name || 'Component'
+    }
+    ```
+
+* **注意：不要在 render 方法中使用 HOC**
+
+    diff 算法使用组件标识来确定它是应该更新现有子树还是将其丢弃并挂载新子树。如果从 render 返回的组件与前一个渲染中的组件相同（===），则 React 通过将子树与新子树进行区分来递归更新子树。如果它们不相等，则完全卸载前一个子树
+
+    ```jsx
+    render() {
+      // 每次调用 render 函数都会创建一个新的 EnhancedComponent
+      // EnhancedComponent1 !== EnhancedComponent2
+      const EnhancedComponent = enhance(MyComponent)
+      // 这将导致子树每次渲染都会进行卸载，和重新挂载的操作！
+      return <EnhancedComponent />
+    }
+    ```
+
+    这不仅仅是性能问题 - 重新挂载组件会导致该组件及其所有子组件的状态丢失
+
+    可以在组件的生命周期方法或其构造函数中进行调用
+
+* **注意：务必复制静态方法**
+
+    当你将 HOC 应用于组件时，原始组件将使用容器组件进行包装。这意味着新组件没有原始组件的任何静态方法
+    
+    为了解决这个问题，你可以在返回之前把这些方法拷贝到容器组件上
+
+    ```jsx
+    function enhance(WrappedComponent) {
+      return class Enhance extends React.Component {
+        // 必须准确知道应该拷贝哪些方法 :(
+        // (可以使用 hoist-non-react-statics 自动拷贝所有非 React 静态方法)
+        static staticMethod = WrappedComponent.staticMethod
+      }
+    }
+    ```
+
+    除了导出组件，另一个可行的方案是再额外导出这个静态方法
+
+    ```jsx
+    // 使用这种方式代替...
+    MyComponent.someFunction = someFunction
+    export default MyComponent
+
+    // ...单独导出该方法...
+    export { someFunction }
+
+    // ...并在要使用的组件中，import 它们
+    import MyComponent, { someFunction } from './MyComponent.js'
+    ```
+
+* **注意：Refs 不会被传递**
+    虽然高阶组件的约定是将所有 props 传递给被包装组件，但这对于 refs 并不适用。那是因为 ref 实际上并不是一个 prop - 就像 key 一样，它是由 React 专门处理的。如果将 ref 添加到 HOC 的返回组件中，则 ref 引用指向容器组件，而不是被包装组件
+
+    这个问题的解决方案是通过使用 React.forwardRef API
+
+#### 反向继承
+
+```jsx
+const hocFactory = (WrappedComponent) => class extends WrappedComponent {
+  render() {
+    return super.render() // <WrappedComponent {...props} />
+  }
+}
+```
+
+相比之前的属性代理方式，这种可以控制 WrappedComponent 的 state，但可能使 state 变得混乱
+
+### 组合式组件开发实践
+
+1. 组件分离
+
+我们期望组件是没有冗余的，组件与组件间视图重叠的部分应当被抽离出来，形成颗粒度更细小的原子组件，使组件组合充满更多的可能，对于颗粒度最小的组件而言，我们希望它是纯粹的、木偶式的组件
+
+2. 逻辑抽象
+
+通过高阶组件实现逻辑与视图的分离
+
+```jsx
+const FinalSelector = compose(AsyncSelector, EnhancedSearcher)(Selector)
+```
+
+![compose-components](./compose-components.png)
+
+## 组件性能优化
+
+无论是 PureRender 还是 key 值，整个 React 组件的优化逻辑都是针对 Virtual DOM 的更新优化
+
+### pure function
+
+React 组件本身就是纯函数。React 的 createElement 方法保证了组件是纯净的，即传入指定 props 得到一定的 Virtual DOM，整个过程都是可预测的
+
+保持纯净状态，可以让方法或组件更加专注（focused），体积更小（small），更独立（independent），更具有复用性（reusability）和可测试性（testability）
+
+### pure render
+
+PureRender 源代码中只对新旧 props 作了浅比较
+
+```js
+const shallowEqual = (obj, newObj) => {
+  if (obj === newObj) return true
+
+  const objKeys = Object.keys(obj)
+  const newObjKeys = Object.keys(newObj)
+
+  if (objKeys.length !== newObjKeys.length) return false
+
+  return objKeys.every(key => newObj[key] === obj[key])
+}
+```
+
+PureComponent 就是 shouldComponentUpdate 浅比较的封装
+
+```jsx
+shouldComponentUpdate(nextProps, nextState) {
+  return (shallowEqual(this.props, nextProps) || shallowEqual(this.state, nextState))
+}
+```
+
+```jsx
+class App extends React.PureComponent {
+  state = {
+    list: [
+      {
+        name: 'one',
+      },
+      {
+        name: 'two',
+      },
+      {
+        name: 'three',
+      },
+    ],
+  }
+
+  handleClick = () => {
+    // OK but very bad...
+    const { list } = this.state
+
+    list.forEach(item => {
+      item.name += '#'
+    })
+    // console.log(list)
+    this.setState({ list })
+  }
+
+  render() {
+    return (
+      <div>
+        <ul>
+          {this.state.list.map(item => <li key={item.name}>{item.name}</li>)}
+        </ul>
+        <button onClick={this.handleClick}>update</button>
+      </div>
+    )
+  }
+}
+```
+
+以上在点击 update 之后会发现视图根本不会更新，而看 console.log 会发现 list 中的 name 是改变了的，但因为 list 的值（引用类型，值是址）并没有改变，所以 shallowEqual 返回 false，没有更新视图
+
+![should-component-update](./should-component-update.png)
+
+#### 优化 pure render
+
+1. 使用引用类型数据的引用不变
+
+    ```jsx
+    // Item 是 PureComponent，props 做浅比较，items !== nextItems（引用类型址不同）
+    <Item items={this.props.items.filter(e => e.val > 30)} />
+    ```
+
+    这样由于每次 Item 的 items props 的引用都改变，尽管 items 还是那几个，视图也不改变，但仍然会更新一遍视图（一次无用的更新）
+
+2. constructor 中 bind 事件
+
+3. 子组件的 JSX
+
+    ```jsx
+    render() {
+      return (
+        <Item>
+          <span>hah</span>
+        </Item>
+      )
+    }
+    ```
+
+    翻译过来就是
+
+    ```jsx
+    render() {
+      return (
+        <Item children={React.createElement('span', {}, 'hah')} />
+      )
+    }
+    ```
+
+    所以与 1 其实是同一个问题
+
+    给父组件设置为 PureComponent，父组件 shouldComponentUpdate 返回 false，则父组件不会更新，diff 算法终止与父组件，就不会去更新子组件
+
+### Immutable.js
+
+### key
+
+key 用来唯一标示渲染的列表元素
