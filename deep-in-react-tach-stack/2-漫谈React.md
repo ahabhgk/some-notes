@@ -674,3 +674,33 @@ class App extends React.PureComponent {
 ### key
 
 key 用来唯一标示渲染的列表元素
+
+```jsx
+[1, 1, 2, 2].map(n => <li key={n}>{n}</li>)
+```
+
+渲染的到：
+
+```html
+<li>1</li>
+<li>2</li>
+```
+
+例：
+
+```html
+<!-- old tree -->
+<li>2</li>
+<li>3</li>
+```
+
+```html
+<!-- new tree -->
+<li>1</li>
+<li>2</li>
+<li>3</li>
+```
+
+如果使用 key=index 的话，React 会先比较 `<li>1</li>` 与 `<li>2</li>`，发现不一样，之后类推，将所有 li 更新一遍
+
+而使用 key=id 的话，React 比较 key 发现只是插入了 `<li>1</li>` 节点，就只会相应的只更新（插入）一个元素
