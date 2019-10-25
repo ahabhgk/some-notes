@@ -34,7 +34,7 @@ MVC 是一种架构设计模式，它通过关注数据界面分离，来鼓励�
 
 ### MVC 问题
 
-当项目变得很大时，会有多个 View 和多个 Model，数据流就会变的非常混乱
+当项目变得很大时，会有多个 View 和多个 Model，（双向的）数据流就会变的非常混乱
 
 ![MVC-bad](./MVC-bad.png)
 
@@ -55,3 +55,5 @@ Flux 是如何解决 MVC 存在的问题呢？正如其名，Flux 的核心思�
 Flux 强调单向数据流，强调谨慎可追溯的数据变动
 
 ![flux-flow](./flux-flow.png)
+
+![clearly-flux](./clearly-flux.png)

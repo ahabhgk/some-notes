@@ -11,3 +11,5 @@
 * 在 Virtual 层实现排版模型，通过 Virtual 层查看大小，位置
 
 * 更通用（兼容 Native 等）的 HTML（XML）元素命名（Write once, run anywhere）
+
+    * 通过类似 React-Canvas？

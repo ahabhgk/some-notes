@@ -63,7 +63,7 @@ function A() {
 
 ## React 中从上到下的数据流到底有什么好处？为什么不直接实现外部状态管理（Redux）
 
-MVC 不是单向数据流，当项目变得很大时，会有多个 View 和多个 Model，数据流就会变的非常混乱
+MVC 不是单向数据流，当项目变得很大时，会有多个 View 和多个 Model，（双向的）数据流就会变的非常混乱
 
 > 一个 Model 对应多个 View，一个 View 对应多个 Model，一个 Model 需要另一个 Model 的数据，另一个 Model 可以改变这个 Model 的数据……
 
