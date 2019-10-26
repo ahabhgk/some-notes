@@ -1,5 +1,17 @@
 # Redux
 
+随着前端应用逐渐变大，状态也越来越复杂，需要一种状态管理的方案，Redux 就是其中一种
+
+MVC（backbone.js...）由于当应用变得很大时，会有多个 View 和多个 Model，（双向的）数据流就会变的非常混乱
+
+![MVC-bad](./MVC-bad.png)
+
+所以出现了 Flux，以单向数据流管理状态，React 推崇的核心也是单向数据流，Flux 中单向数据流可以看作是在其整体架构上的延伸，Redux 是也不是 Flux，它遵循了 Flux 的单向数据流的理念，同时简化了 Flux
+
+![different](./different.jpeg)
+
+Flux/Redux 这种以单向数据流管理状态更像是一种设计模式
+
 ## 三大原则：
 
 1. 单一数据源
@@ -104,9 +116,11 @@ combineReducers 其实就是一个高阶 reducer，因为 combineReducers 就是
 
 ## 源码分析
 
+### createStore
+
 createStore 其实就把 reducer 包了一层，根本没有 store，只是暴露出几个接口，方便操作，并用发布订阅模式实现了 state 改变时执行订阅的函数的功能，然后在一开始实现 enhancer，供 applyMiddleware 使用
 
-reducer、preloadedState/initialState 都得自己写，Redux 为我们干的很少，所以 Redux/Flux 更多是一种设计模式
+reducer、preloadedState/initialState 都得自己写，Redux 为我们干的很少
 
 ```js
 const createStore = (reducer, preloadedState, enhancer) => {
@@ -162,6 +176,8 @@ const createStore = (reducer, preloadedState, enhancer) => {
 }
 ```
 
+### combineReducers
+
 combineReducers 使我们更方便的组织 state，它干的就是将所有的 reducers 执行，使相应的 reducer 更新相应的 state，最终得到总共的新的 state
 
 ```js
@@ -175,11 +191,15 @@ const combineReducers = reducers => (state, action) => (
 )
 ```
 
+### compose
+
 compose 就是典型的函数式编程中的组合函数，用于组合多个 enhancers 成一个 enhancer
 
 ```js
 const compose = (...fns) => fns.reduce((f, g) => (...args) => f(g(...args)))
 ```
+
+### applyMiddleware
 
 applyMiddleware 可以对特定类型的 action 进行操作
 
@@ -252,3 +272,9 @@ thunk.withExtraArgument = createThunkMiddleware;
 
 export default thunk;
 ```
+
+参考：
+
+* 深入 react 技术栈
+
+* [完全理解 redux](https://mp.weixin.qq.com/s?__biz=MzIxNjgwMDIzMA==&mid=2247484209&idx=1&sn=1a33a2c8cb58ae98e4f8080ab59da06f&chksm=9782cdb8a0f544ae4101a1a7453e8f5a320d9f338c92bf4a6ce6ae31c6228fd5887a091d7987&mpshare=1&scene=23&srcid=1024nQu5koC1MkPZfll5npNZ&sharer_sharetime=1571885623450&sharer_shareid=ff850364fdc08ae532955239c841ceda%23rd)
