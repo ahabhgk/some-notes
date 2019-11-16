@@ -555,6 +555,171 @@ const FinalSelector = compose(AsyncSelector, EnhancedSearcher)(Selector)
 
 无论是 PureRender 还是 key 值，整个 React 组件的优化逻辑都是针对 Virtual DOM 的更新优化
 
+### React 组件更新
+
+```jsx
+import React from 'react'
+
+class Left extends React.Component {
+  state = {
+    content: 'left',
+  }
+
+  handleChange = () => {
+    this.setState(s => ({ content: s.content + 1 }))
+  }
+
+  render() {
+    console.log('render: Left')
+    return (
+      <span>
+        {this.state.content}
+        <button onClick={this.handleChange}>change</button>
+        <div>
+          <LeftLeft /> / <LeftRight />
+        </div>
+      </span>
+    )
+  }
+}
+
+class LeftLeft extends React.Component {
+  state = {
+    content: 'leftleft',
+  }
+
+  handleChange = () => {
+    this.setState(s => ({ content: s.content + 1 }))
+  }
+
+  render() {
+    console.log('render: LeftLeft')
+    return (
+      <span>
+        {this.state.content}
+        <button onClick={this.handleChange}>change</button>
+      </span>
+    )
+  }
+}
+
+class LeftRight extends React.Component {
+  state = {
+    content: 'leftright',
+  }
+
+  handleChange = () => {
+    this.setState(s => ({ content: s.content + 1 }))
+  }
+
+  render() {
+    console.log('render: LeftRight')
+    return (
+      <span>
+        {this.state.content}
+        <button onClick={this.handleChange}>change</button>
+      </span>
+    )
+  }
+}
+
+class Right extends React.Component {
+  state = {
+    content: 'right',
+  }
+
+  handleChange = () => {
+    this.setState(s => ({ content: s.content + 1 }))
+  }
+
+  render() {
+    console.log('render: Right')
+    return (
+      <span>
+        {this.state.content}
+        <button onClick={this.handleChange}>change</button>
+        <div><RightLeft /> / <RightRight /></div>
+      </span>
+    )
+  }
+}
+
+class RightLeft extends React.Component {
+  state = {
+    content: 'rightleft',
+  }
+
+  handleChange = () => {
+    this.setState(s => ({ content: s.content + 1 }))
+  }
+
+  render() {
+    console.log('render: RightLeft')
+    return (
+      <span>
+        {this.state.content}
+        <button onClick={this.handleChange}>change</button>
+      </span>
+    )
+  }
+}
+
+class RightRight extends React.Component {
+  state = {
+    content: 'rightright',
+  }
+
+  handleChange = () => {
+    this.setState(s => ({ content: s.content + 1 }))
+  }
+
+  render() {
+    console.log('render: RightRight')
+    return (
+      <span>
+        {this.state.content}
+        <button onClick={this.handleChange}>change</button>
+      </span>
+    )
+  }
+}
+
+class App extends React.Component {
+  state = {
+    content: 'App'
+  }
+
+  handleChange = () => {
+    this.setState(s => ({ content: s.content + 1 }))
+  }
+
+  render() {
+    console.log('render: App')
+    return (
+      <div>
+        {this.state.content}
+        <button onClick={this.handleChange}>change</button>
+        <div>
+          <Left /><Right />
+        </div>
+      </div>
+    )
+  }
+}
+
+export default App
+```
+
+每个 render 方法都有执行 log 告诉我们哪里执行了协调（Diffing）
+
+我们点击 App 的 change 会发现相应子节点的 render 也都会执行，点击 Left / Right 的 change，相应子节点的 render 也都会执行
+
+而我们给 Left 和 Right 加上 PureComponent，这时点击 App 的 change 会发现 Diffing 在 Left 和 Right 组件上被阻断了，而点击 Left / Right 的 change 就会执行相应子节点的 render
+
+我们把再看控制台中的变化，无论 PureComponent 添加与否，都是只改变了变化的部分
+
+所以 React 的 Virtual DOM 和 Diffing 为我们最小化了对 DOM 的操作，而 PureComponent、shouldComponentUpdate、memo 优化的是 Diffing 部分的开销
+
 ### pure function
 
 React 组件本身就是纯函数。React 的 createElement 方法保证了组件是纯净的，即传入指定 props 得到一定的 Virtual DOM，整个过程都是可预测的
