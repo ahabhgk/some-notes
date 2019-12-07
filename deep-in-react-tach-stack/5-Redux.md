@@ -2,6 +2,28 @@
 
 随着前端应用逐渐变大，状态也越来越复杂，需要一种状态管理的方案，Redux 就是其中一种
 
+总结起来 React 状态管理方案就分为两类：
+
+* 外部 Model，通过事件修改状态，组件通过监听订阅状态（观察者模式）
+
+  * Redux
+
+  * Mobx
+
+  * EventBus
+
+  * hox
+
+* 通过 React Context 提升状态（包括修改状态的方法），在组件中拿到并使用 Context
+
+  * unstated
+
+  * unstated-next
+
+  * reunx
+
+使用外部 Model 的模式由于不依赖于 React，所以不仅适用于 React，在各个框架甚至原生应用中都可以使用；而第二种依赖于 React Context 仅适用于 React 应用，但是十分轻量
+
 MVC（backbone.js...）由于当应用变得很大时，会有多个 View 和多个 Model，（双向的）数据流就会变的非常混乱
 
 ![MVC-bad](./MVC-bad.png)
