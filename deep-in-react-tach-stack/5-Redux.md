@@ -30,6 +30,14 @@ Flux/Redux 这种以单向数据流管理状态更像是一种设计模式
 
 它提供了一个分类处理 action 的机会。在 middleware 中，你可以检阅每一个流过的 action，挑选出特定类型的 action 进行相应操作，给你一次改变 action 的机会
 
+### Redux 为什么需要 middleware
+
+middleware 大部分都是用来处理异步，因为 Redux 的 reducer 必须要是一个纯函数，不能有任何的副作用，所以 Redux 引入了 middleware，在 action 没有到 reducer 的时候就拦截 action 并进行副作用的操作
+
+如果 reducer 不纯（我们当然可以写成不纯的），就可以在 reducer 中处理副作用，但这样不仅代码难看（async reducer() => await ...），而且没有可预测性、组织性……
+
+也正因为 reducer 是纯函数，我们通过 middleware 进行的异步操作和在一些大项目中对 action 的特殊需求的一些处理，才可以很好的进行组织管理
+
 ## 高阶 reducer
 
 `higher-order-reducer:: reducer => reducer`
