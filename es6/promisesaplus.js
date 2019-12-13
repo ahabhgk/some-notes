@@ -280,7 +280,7 @@ Promise.race = function(promises) {
 }
 
 Promise.prototype.catch = function (onRejected) { // 利用 promise 穿透
-  this.then(null, onRejected)
+  return this.then(null, onRejected)
 }
 
 Promise.resolve = function (value) {

@@ -1,0 +1,19 @@
+{
+  "name": "es6",
+  "version": "1.0.0",
+  "main": "async-promgramming.js",
+  "devDependencies": {
+    "mocha": "^2.5.3"
+  },
+  "scripts": {
+    "test:promise-normal": "./node_modules/.bin/promises-aplus-tests promisesaplus.js",
+    "test:promise-getify": "./node_modules/.bin/promises-aplus-tests promisesaplus-getify.js",
+    "test:promise-gyj": "./node_modules/.bin/promises-aplus-tests promisesaplus-gyj.js"
+  },
+  "author": "ahabhgk",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "promises-aplus-tests": "^2.1.2"
+  }
+}
