@@ -236,9 +236,9 @@ private:
 
 ### 性质
 
-* 第 i 层上最多有 2 ** (i - 1) 个节点
+* 第 i 层上最多有 2 ^ (i - 1) 个节点
 
-* 深度为 k 的二叉树至多有 2 ** k - 1 个结点
+* 深度为 k 的二叉树至多有 2 ^ k - 1 个结点
 
 * 叶节点数 n0，度为 2 的节点数 n2，n0 = n2 + 1
 
@@ -345,4 +345,185 @@ void inThreading(BiThrTree p) {
 得到最优二叉树后进行编码，比如左为 1 右为 0（哈夫曼编码）
 
 # 图
+
+G(V, E)
+
+V(Vertex)：点的集合
+
+E(Edge)：边的集合
+
+无向图：G(V, E); V = {A, B, C, D}; E = {(A, B), (B, C), (C, D), (D, A), (A, C)};
+
+有向图：G(V, E); V = {A, B, C, D}; E = {<A, D>, <B, A>, <C, A>, <B, C>}
+
+简单图：不存在顶点到其自身的边，切同一条边不重复出现
+
+无向完全图：任意两顶点都有边
+
+有向完全图：任意两顶点都有方向相反的两条边
+
+度、出度、入度
+
+连通：两顶点存在路径
+
+连通图：任意两顶点都连通
+
+强连通图：有向连通图
+
+连通分量：极大连通（能连通的都算上）子图
+
+## 存储结构
+
+多重链表由于度有时相差很大（类似树），导致空间浪费
+
+### 邻接矩阵
+
+Vertex 与 Edge 分开存，Vertex 不分主次大小所以用一维数组，Edge 需要表示顶点间关系所以用二维数组
+
+![MGraph](./images/MGraph.png)
+
+```
+Vertex = [v0, v1, v2, v3]
+
+Edge = [
+  [0, 1, 1, 1],
+  [1, 0, 1, 0],
+  [1, 1, 0, 1],
+  [1, 0, 1, 0],
+]
+```
+
+![ALGraph](./images/ALGraph.png)
+
+```
+Vertex = [v0, v1, v2, v3]
+
+Edge = [
+  [0, 0, 0, 1],
+  [1, 0, 1, 0],
+  [1, 1, 0, 0],
+  [0, 0, 0, 0],
+]
+```
+
+vi, vj 是否连通或存在弧，判断 Edge[i][j] 是否等于 1
+
+![net](./images/net.png)
+
+```
+Vertex = [v0, v1, v2, v3, v4]
+
+Edge = [
+  [ 0 , INF, INF, INF,  6 ],
+  [ 9 ,  0 ,  3 , INF, INF],
+  [ 2 , INF,  0 ,  5 , INF],
+  [INF, INF, INF,  0 ,  1 ],
+  [INF, INF, INF, INF,  0 ],
+]
+```
+
+无向网（无向带权图）类似
+
+```cpp
+// 创建无向网
+template <typename T>
+struct MGraph {
+  T vexs[VEXNUM];
+  int arc[VEXNUM][VEXNUM];
+  int vertexsNum;
+  int edgesNum;
+}
+
+void createMGraph(MGraph* g) {
+  cout << "输入顶点数和边数：" << endl;
+  cin >> g->vertexsNum >> g->edgesNum;
+
+  cout << "输入顶点信息" << endl;
+  for (int i = 0; i < g->vertexsNum; i++) {
+    cin >> g->vexs[i];
+  }
+
+  // 初始化边
+  for (int i = 0; i < g->vertexsNum; i++) {
+    for (int j = 0; j < g->vertexsNum; j++) {
+      g->arc[i][j] = INF;
+    }
+  }
+
+  cout << "输入边信息" << endl;
+  for (int n = 0; n < g->edgesNum; n++) {
+    cout << "输入 (vi, vj) 的下标 i，下标 j，权 w：" << endl;
+    int i, j, w;
+    cin >> i >> j >> w;
+
+    g->arc[i][j] = w;
+    g->arc[j][i] = w; // 无向图，矩阵对称
+  }
+}
+```
+
+vertexsNum 个顶点，edgesNum 个边，时间复杂度：O(vertexsNum + vertexsNum ^ 2 + edgesNum) == O(n ^ 2)
+
+### 邻接表
+
+邻接矩阵存稀疏图时有极大浪费
+
+![adjList](./images/adjList.png)
+
+![ALAdjList](./images/ALAdjList.png)
+
+* 顶点用一维数组存（也可以用链表，不过数组方便读取信息）`[[data, firstEdge], ...]`
+
+* 由于顶点的邻接点个数不定，所以边用链表存 `[adjvex, next]`
+
+![ALNetAdjList](./images/ALNetAdjList.png)
+
+```cpp
+// 建立有向网邻接表
+struct EdgeNode {
+  int adjvex; // 对应下标
+  int weight;
+  EdgeNode* next;
+}
+
+template <typename T>
+struct VertexNode {
+  T data; // 值
+  EdgeNode* firstEdge;
+}
+
+template <typename T>
+struct ALGraph {
+  VertexNode<T> adjList[VEXNUM];
+  int VertexsNum;
+  int EdgesNum;
+}
+
+void createALGraph(ALGraph* g) {
+  cout << "输入顶点数和边数：" << endl;
+  cin >> g->vertexsNum >> g->edgesNum;
+
+  // 读顶点信息，建立顶点数组，初始化边链表
+  for (int i = 0; i < g->vertexsNum; i++) {
+    cin >> g->adjList[i].data;
+    g->adjList[i].firstEdge = NULL;
+  }
+
+  // 建立边链表
+  for (int n = 0; n < g->edgesNum; n++) {
+    cout << "输入 (vi, vj) 的下标 i，下标 j，权 w："
+    int i, j, w;
+    cin >> i >> j >> w;
+
+    EdgeNode* e = new EdgeNode;
+    // 头插法
+    e->adjvex = j; // 弧 (vi, vj) 从 i 指向 j，j 指向（赋值）为 e
+    e->next = g->adjList[i].firstEdge; // firstEdge 指向 i
+    e->weight = w;
+    g->adjList[i].firstEdge = e; // 更新 firstEdge，为下一个插入边
+  }
+}
+```
+
+### 十字链表
 

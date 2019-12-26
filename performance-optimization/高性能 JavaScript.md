@@ -1,3 +1,5 @@
+![高性能 JavaScript](./高性能JavaScript.png)
+
 # 高性能 JavaScript
 
 ## 加载与执行
