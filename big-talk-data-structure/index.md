@@ -657,7 +657,7 @@ void BFSTraverse(MGraph g) {
 
 ### Prim
 
-以某点为起点，逐渐找到已构建的生成树的顶点上权值最小的边，并将顶点加入生成树，直至所有顶点都加入后得到最小生成树
+以某点为起点，逐渐找到已构建的生成树的顶点上权值最小的边，并将顶点加入生成树，直至所有顶点都加入后得到最小生成树（贪心）
 
 ```cpp
 template <typename T>
@@ -732,11 +732,143 @@ void prim(MGraph g) {
 }
 ```
 
+![prim](./images/prim.png)
+
+1. v0 初始化
+    adjvex[] = v0; lowcost[i] = g.arc[v0][i]
+    ```
+    adjvex  { v0: v0 , v1: v0 , v2: v0 , v3: v0 , v4: v0 , v5: v0 , v6: v0 , v7: v0 , v8: v0  }
+    lowcost { v0:  0 , v1: 10 , v2: INF, v3: INF, v4: INF, v5: 11 , v6: INF, v7: INF, v8: INF }
+    ```
+    找到 lowcost 中不在当前生成树中（!= 0）且最小的边的顶点 k = v1，权为 min
+    v1 放入当前生成树中（lowcost[v1] = 0）
+    操作（输出）k、min
+
+2. v1
+    因为 lowcost[v0, v1] == 0（已在当前生成树中），所以不更新 v0, v1
+    因为 18 < INF 所以更新 lowcost[v2] = 18; adjvex[v2] = v1
+    因为 12 < INF 所以更新 lowcost[v8] = 12; adjvex[v8] = v1
+    因为 16 < INF 所以更新 lowcost[v6] = 16; adjvex[v6] = v1
+    其他的因为当前生成树到其距离 >= 原来的距离，所以不更新
+    ```
+    adjvex  { v0: v0 , v1: v0 , v2: v1 , v3: v0 , v4: v0 , v5: v0 , v6: v1 , v7: v0 , v8: v1  }
+    lowcost { v0:  0 , v1:  0 , v2: 18 , v3: INF, v4: INF, v5: 11 , v6: 16 , v7: INF, v8: 12  }
+    ```
+    找到 lowcost 中不在当前生成树中（!= 0）且最小的边的顶点 k = v5，权为 min
+    v5 放入当前生成树中（lowcost[v5] = 0）
+    操作（输出）k、min
+
+3. v5
+    因为 lowcost[v0, v1, v5] == 0（已在当前生成树中），所以不更新 v0, v1, v5
+    因为 26 < INF 所以更新 lowcost[v4] = 26; adjvex[v4] = v5
+    其他的因为当前生成树到其距离 >= 原来的距离，所以不更新
+    ```
+    adjvex  { v0: v0 , v1: v0 , v2: v1 , v3: v0 , v4: v5 , v5: v0 , v6: v1 , v7: v0 , v8: v1  }
+    lowcost { v0:  0 , v1:  0 , v2: 18 , v3: INF, v4: 26 , v5:  0 , v6: 16 , v7: INF, v8: 12  }
+    ```
+    找到 lowcost 中不在当前生成树中（!= 0）且最小的边的顶点 k = v8，权为 min
+    v8 放入当前生成树中（lowcost[v8] = 0）
+    操作（输出）k、min
+
+4. v8
+    因为 lowcost[v0, v1, v5, v8] == 0（已在当前生成树中），所以不更新 v0, v1, v5, v8
+    因为 21 < INF 所以更新 lowcost[v3] = 21; adjvex[v3] = v8
+    因为 8 < 12 所以更新 lowcost[v2] = 8; adjvex[v2] = v8
+    其他的因为当前生成树到其距离 >= 原来的距离，所以不更新
+    ```
+    adjvex  { v0: v0 , v1: v0 , v2: v8 , v3: v8 , v4: v5 , v5: v0 , v6: v1 , v7: v0 , v8: v1  }
+    lowcost { v0:  0 , v1:  0 , v2:  8 , v3: 21 , v4: 26 , v5:  0 , v6: 16 , v7: INF, v8:  0  }
+    ```
+    找到 lowcost 中不在当前生成树中（!= 0）且最小的边的顶点 k = v2，权为 min
+    v2 放入当前生成树中（lowcost[v2] = 0）
+    操作（输出）k、min
+
+5. v2
+    因为 lowcost[v0, v1, v5, v8, v2] == 0（已在当前生成树中），所以不更新 v0, v1, v5, v8, v2
+    其他的因为当前生成树到其距离 >= 原来的距离，所以不更新
+    ```
+    adjvex  { v0: v0 , v1: v0 , v2: v8 , v3: v8 , v4: v5 , v5: v0 , v6: v1 , v7: v0 , v8: v1  }
+    lowcost { v0:  0 , v1:  0 , v2:  0 , v3: 21 , v4: 26 , v5:  0 , v6: 16 , v7: INF, v8:  0  }
+    ```
+    找到 lowcost 中不在当前生成树中（!= 0）且最小的边的顶点 k = v6，权为 min
+    v6 放入当前生成树中（lowcost[v6] = 0）
+    操作（输出）k、min
+
+6. v6
+    因为 lowcost[v0, v1, v5, v8, v2, v6] == 0（已在当前生成树中），所以不更新 v0, v1, v5, v8, v2, v6
+    因为 19 < INF 所以更新 lowcost[v7] = 19; adjvex[v7] = v6
+    其他的因为当前生成树到其距离 >= 原来的距离，所以不更新
+    ```
+    adjvex  { v0: v0 , v1: v0 , v2: v8 , v3: v8 , v4: v5 , v5: v0 , v6: v1 , v7: v6 , v8: v1  }
+    lowcost { v0:  0 , v1:  0 , v2:  0 , v3: 21 , v4: 26 , v5:  0 , v6:  0 , v7: 19 , v8:  0  }
+    ```
+    找到 lowcost 中不在当前生成树中（!= 0）且最小的边的顶点 k = v7，权为 min
+    v7 放入当前生成树中（lowcost[v7] = 0）
+    操作（输出）k、min
+
+7. v7
+    因为 lowcost[v0, v1, v5, v8, v2, v6, v7] == 0（已在当前生成树中），所以不更新 v0, v1, v5, v8, v2, v6, v7
+    因为 7 < 26 所以更新 lowcost[v4] = 7; adjvex[v4] = v7
+    因为 16 < 21 所以更新 lowcost[v3] = 16; adjvex[v3] = v7
+    其他的因为当前生成树到其距离 >= 原来的距离，所以不更新
+    ```
+    adjvex  { v0: v0 , v1: v0 , v2: v8 , v3: v8 , v4: v7 , v5: v0 , v6: v1 , v7: v6 , v8: v1  }
+    lowcost { v0:  0 , v1:  0 , v2:  0 , v3: 21 , v4:  7 , v5:  0 , v6:  0 , v7:  0 , v8:  0  }
+    ```
+    找到 lowcost 中不在当前生成树中（!= 0）且最小的边的顶点 k = v3，权为 min
+    v3 放入当前生成树中（lowcost[v3] = 0）
+    操作（输出）k、min
+
+8. v3
+    因为 lowcost[v0, v1, v5, v8, v2, v6, v7, v3] == 0（已在当前生成树中），所以不更新 v0, v1, v5, v8, v2, v6, v7, v3
+    其他的因为当前生成树到其距离 >= 原来的距离，所以不更新
+    ```
+    adjvex  { v0: v0 , v1: v0 , v2: v8 , v3: v7 , v4: v7 , v5: v0 , v6: v1 , v7: v6 , v8: v1  }
+    lowcost { v0:  0 , v1:  0 , v2:  0 , v3:  0 , v4:  7 , v5:  0 , v6:  0 , v7:  0 , v8:  0  }
+    ```
+    找到 lowcost 中不在当前生成树中（!= 0）且最小的边的顶点 k = v4，权为 min
+    v4 放入当前生成树中（lowcost[v4] = 0）
+    操作（输出）k、min
+
+9. 循环完，得到：
+    ```
+    adjvex  { v0: v0 , v1: v0 , v2: v8 , v3: v7 , v4: v7 , v5: v0 , v6: v1 , v7: v6 , v8: v1  }
+    lowcost { v0:  0 , v1:  0 , v2:  0 , v3:  0 , v4:  0 , v5:  0 , v6:  0 , v7:  0 , v8:  0  }
+    ```
+
+根据
+
+```
+adjvex[v0] = v0 得 v0 为最小生成树的根节点
+
+adjvex[v1, v5] = v0
+
+adjvex[v6, v8] = v1
+
+adjvex[v7] = v6
+
+adjvex[v2] = v8
+
+adjvex[v3, v4] = v7
+```
+
+得最小生成树：
+
+```
+v0--v5
+|
+v1--v6--v7--v4
+|       |
+v8      v3
+|
+v2
+```
+
 时间复杂度：O(n ^ 2) // 可优化（算法导论 23.2）
 
 ### Kruskal
 
-找最小权值的边来构建，同时避免形成环路
+找最小权值的边来构建，同时避免形成环路（贪心）
 
 ```cpp
 // 使用边集数组
@@ -760,6 +892,9 @@ void kruskal(MGraph g) {
   int parent[EDGENUM];
 
   // 初始化并查集
+  // 各个边形成的集合 
+  // 1. 不能形成环路：没有交集
+  // 2. 求并后包含所有边
   for (int i = 0; i < g.edgesNum; i++) {
     parent[i] = i;
   }
@@ -787,6 +922,8 @@ void kruskal(MGraph g) {
 两顶点之间边上权值之和最小的路径
 
 ### Dijkstra
+
+从源点出发，每次选择离源点最近的一个顶点前进，然后以该顶点为中心进行扩展，最终得到源点到其余所有点的最短路径（贪心）
 
 ```cpp
 void dijkstra(MGraph g) {
@@ -896,14 +1033,284 @@ found { 点: 是否已找到原点到该点的最短距离 } // 0: false, 1: tru
     ```
     distance { D:  0 , C:  3 , E:  4 , F:  6 , B: 13 , G: 12 , A: 18  }
     path     { D:  D , C:  D , E:  D , F:  E , B:  C , G:  E , A:  F  }
-    found    { D:  1 , C:  1 , E:  1 , F:  1 , B:  1 , G:  0 , A:  0  }
+    found    { D:  1 , C:  1 , E:  1 , F:  1 , B:  1 , G:  0 , A:  1  }
     ```
 
-根据 path[A] = F, path[F] = E, path[E] = D 得最短路径：D -> E -> F -> A
+7. 根据边的权值最小且没有走过找到 G，走到 G，found[A] = 1
+    因为 found[D, C, E, F, B, A, G] = 1 所以不更新 D, C, E, F, B, A, G
+    走完 B
+    ```
+    distance { D:  0 , C:  3 , E:  4 , F:  6 , B: 13 , G: 12 , A: 18  }
+    path     { D:  D , C:  D , E:  D , F:  E , B:  C , G:  E , A:  F  }
+    found    { D:  1 , C:  1 , E:  1 , F:  1 , B:  1 , G:  1 , A:  1  }
+    ```
+
+根据 path[A] = F, path[\F] = E, path[\E] = D, path[\D] = D 得最短路径：D -> E -> F -> A
 
 > 权不能是负数
 
 时间复杂度：O(n ^ 2)
 
 ### Floyd
+
+在两个顶点之间插入一个或一个以上的中转点，比较经过与不经过中转点的距离哪个更短（动态规划）
+
+```cpp
+void floyd(MGraph g) {
+  int path[][], distance[][];
+
+  for (int i = 0; i < g.vertexsNum; i++) {
+    for (int j = 0; j < g.vertexsNum; j++) {
+      distance[i][j] = g.arc[i][j];
+      path[i][j] = j;
+    }
+  }
+
+  for (int k = 0; k < g.vertexsNum; k++) {
+    for (int i = 0; i < g.vertexsNum; i++) {
+      for (int j = 0; j < g.vertexsNum; j++) {
+        if (distance[i][j] > distance[i][k] + distance[k][j]) {
+          distance[i][j] = distance[i][k] + distance[k][j];
+          path[i][j] = path[i][k];
+        }
+      }
+    }
+  }
+}
+```
+
+![floyd](./images/floyd.png)
+
+1. 初始化
+    ```
+    distance     0   1   2   3
+              0  0   3   9  INF
+              1  3   0   4  13
+              2  9   4   0   5
+              3 INF 13   5   0
+    ---------------------------
+    path         0   1   2   3
+              0  0   1   2   3
+              1  0   1   2   3
+              2  0   1   2   3
+              3  0   1   2   3
+    ```
+
+2. k = 0
+    ```
+    distance     0   1   2   3
+              0  0   3   9  INF
+              1  3   0   4  13
+              2  9   4   0   5
+              3 INF 13   5   0
+    ---------------------------
+    path         0   1   2   3
+              0  0   1   2   3
+              1  0   1   2   3
+              2  0   1   2   3
+              3  0   1   2   3
+    ```
+
+3. k = 1
+    distance[0][1] + distance[1][2] == 3 + 4 < 9 更新：
+    
+    distance[0][2] = distance[2][0] = 7;
+    
+    path[0][2] = path[0][1] = 1; path[2][0] = path[2][1] = 1;
+    
+    distance[0][1] + distance[1][3] == 3 + 13 < INF 更新：
+    
+    distance[0][3] = distance[3][0] = 16;
+    
+    path[0][3] = path[0][1] = 1; path[3][0] = path[3][1] = 1;
+    ```
+    distance     0   1   2   3
+              0  0   3  \7  \16
+              1  3   0   4  13
+              2 \7   4   0   5
+              3 \16 13   5   0
+    ---------------------------
+    path         0   1   2   3
+              0  0   1  \1  \1
+              1  0   1   2   3
+              2 \1   1   2   3
+              3 \1   1   2   3
+    ```
+
+4. k = 2
+    distance[0][2] + distance[2][3] == 7 + 5 == 12 < 16 更新：
+    
+    distance[0][3] = distance[3][0] = 12;
+    
+    path[0][3] = path[0][2] = 1; path[3][0] = path[3][2] = 2;
+    
+    distance[1][2] + distance[2][3] == 4 + 5 == 9 < 13 更新：
+    
+    distance[1][3] = distance[3][1] = 9;
+    
+    path[1][3] = path[1][2] = 2; path[3][1] = path[3][2] = 2
+    ```
+    distance     0   1   2   3
+              0  0   3   7  \12
+              1  3   0   4  \9
+              2  7   4   0   5
+              3 \12 \9   5   0
+    ---------------------------
+    path         0   1   2   3
+              0  0   1   1  \1
+              1  0   1   2  \2
+              2  1   1   2   3
+              3 \2  \2   2   3
+    ```
+
+5. k = 3
+    ```
+    distance     0   1   2   3
+              0  0   3   7   12
+              1  3   0   4   9
+              2  7   4   0   5
+              3  12  9   5   0
+    ---------------------------
+    path         0   1   2   3
+              0  0   1   1   1
+              1  0   1   2   2
+              2  1   1   2   3
+              3  2   2   2   3
+    ```
+
+0 -> 3:
+
+    `distance[0][3] == 12; distance[0][2] == 7; distance[0][1] == 3; distance[0][0] == 0;`
+
+    `path[0][3] == 1; path[\1][3] == 2; path[\2][3] == 3; path[\3][3] == 3;`
+
+时间复杂度：O(n ^ 3) 空间复杂度：O(n ^ 2)
+
+## 拓扑排序
+
+AOV（Activity On Vertex Network）网：在一个表示工程的有向图无环中，用顶点表示活动，用弧表示顶点之间的优先关系
+
+拓扑序列：设 G = (V, E) 是一个具有 n 个顶点的有向图，V 中的顶点序列 v1, v2, …, vn 满足若从顶点 vi 到 vj 有一条路径，则在顶点序列中顶点 vi 必在 vj 之前，则我们称这样的顶点序列为一个拓扑序列
+
+![topological-seq](./images/topological-seq.png)
+
+0, 1, 2, 3 是；0, 2, 1, 3 也是
+
+拓扑排序：对有向图构造拓扑序列的过程
+
+### BFS
+
+根据顶点入度判断是否有依赖关系，每次选取入度为 0 的顶点输出
+
+```
+topologicalSort(Graph g) {
+  Stack stack // Queue q
+  Array result
+  
+  for (Vertex v in g.vertexs) {
+    if (v.inDegree == 0) {
+      stack.push(v)
+    }
+  }
+
+  while (stack.isNotEmpty) {
+    Vertex v = stack.pop()
+    result.push(v)
+    for (Vertex v in v.adjacentVertexs) {
+      v.inDegree -= 1
+      if (v.inDegree == 0) {
+        stack.push(v)
+      }
+    }
+  }
+
+  return result
+}
+```
+
+没有顺序要求，队列也可以
+
+也称入度表法（贪心）
+
+v 个点 e 条边，for v 之后入度减一的操作有 e 次，所以时间复杂度：O(v + e)
+
+### DFS
+
+深度优先搜索过程中，当到达出度为 0 的顶点时，进行回退，同时记录出度为 0 的顶点，将其入栈，最终出栈的逆序为拓扑序列
+
+```
+DFS-t(Vertex v, Map visited, Stack stack) {
+  visited[v] = true
+  for (Vertex v in v.adjacentVertexs) {
+    if (!visited[v]) {
+      DFS-t(v, visited, stack)
+    }
+  }
+  stack.push(v)
+}
+
+topologicalSort(Graph g) {
+  Map visited
+  Stack stack
+
+  for (Vertex v in g.vertexs) {
+    if (!visited[v]) {
+      DFS-t(v, visited, stack)
+    }
+  }
+
+  return stack.toArray().reverse()
+}
+```
+
+时间复杂度：O(v + e)
+
+## 关键路径
+
+AOE（Activity On Edge Network）网：在一个表示工程的带权有向图中，用顶点表示事件，用边表示活动，用边上的权值表示活动的持续时间
+
+路径长度：各个活动所持续的时间之和
+
+关键路径：从原点到终点具有最大长度的路径叫关键路径（v1->v2）
+
+关键活动：关键路径上的活动（e1, e2）
+
+相比原来拓扑排序多了找最大路径的一步：
+
+```
+topologicalKeyRoad(Graph g) {
+  Stack stack // Queue q
+  Array result
+  Map events
+
+  for (Vertex v in g.vertexs) {
+    if (v.inDegree == 0) {
+      stack.push(v)
+    }
+
+    events[v] = 0
+  }
+
+  while (stack.isNotEmpty) {
+    Vertex v = stack.pop()
+    result.push(v)
+    for (Vertex v in v.adjacentVertexs, Edge e in v.edges) {
+      v.inDegree -= 1
+      if (v.inDegree == 0) {
+        stack.push(v)
+      }
+
+      if (events[v] + e.weight > events[v]) { // 找出时间最长的事件（最大的边）
+        events[v] = events[v] + e.weight
+      }
+    }
+  }
+
+  return { result, events }
+}
+```
+
+时间复杂度：O(v + e)
+
+# 查找
 
