@@ -1559,4 +1559,113 @@ AVL 树
 
 # 排序
 
+稳定性：k1 == k2，若排序之前 k1 在 k2 之前，排序后顺序不变则稳定，顺序改变则不稳定
 
+内排序：整个过程中，待排序的所有记录放在内存中（插入排序、交换排序、选择排序、归并排序）
+
+外排序：由于个数太多，不能全放内存，整个过程需要内外多次交换数据
+
+![sort](./images/sort.jpg)
+
+## 冒泡排序
+
+相邻的两两比较，反序则交换
+
+```
+bubbleSort(Array arr) {
+  for (int i = 1; i < arr.length; i++) { // length - 1 次循环，length - 1 次两两比较
+    for (int j = arr.length - 1; j > i; j--) { // 前一个与后一个比较，大则交换
+      if (arr[j - 1] > arr[j]) {
+        arr.swap(arr[j - 1], arr[j])
+      }
+    }
+  }
+}
+```
+
+时间复杂度：
+
+* 最优：已经排好，O(n)
+
+* 最差：逆序，(n - 1) + (n - 2) + ... + 1 = n * (n - 1) / 2 = O(n ^ 2)
+
+* 平均：O(n ^ 2)
+
+## 简单选择排序
+
+找到第 i 小的，放到位置 i 上
+
+```
+selectSort(Array arr) {
+  for (int i in arr) {
+    int minIndex
+
+    for (int j = i + 1; j < arr.length; i++) {
+      if (arr[minIndex] > arr[j]) minIndex = j
+    }
+
+    arr.swap(i, minIndex)
+  }
+}
+```
+
+时间复杂度：无论最好和最坏都需要比较 (n - 1) + (n - 2) + ... + 1 = n * (n - 1) / 2 = O(n ^ 2)
+
+## 直接插入排序
+
+将元素插入到已排好的有序序列中
+
+```
+insertSort(Array arr) {
+  for (int i = 1; i < arr.length; i++) {
+    if (arr[i] < arr[i - 1]) {
+      int index = i - 1
+      int data = arr[i]
+      while (!(arr[index] < data)) {
+        arr[index + 1] = arr[index]
+        index -= 1
+      }
+      arr[index] = data
+    }
+  }
+}
+```
+
+时间复杂度：
+
+* 最优：顺序，只比较一遍，没有移动，O(n)
+
+* 最差：逆序，O(n ^ 2)
+
+* 平均：O(n ^ 2)
+
+## 希尔排序
+
+基本有序：小的基本在前面，大的基本在后面，不等于局部有序
+
+通过一个增量，对相隔一个增量的元素组成的子序列进行简单选择排序，得到基本有序，通过逐渐减小增量得到全部有序
+
+```cpp
+void shellSort(int * arr, int len) {
+  for (int step = len / 2; step > 0; step /= 2) {
+    for (int i = 0; i < step; i++) {
+      // selectSort
+      for (int j = i; j < len; j += step) {
+        int minIndex = j;
+        for (int k = j + step; k < len; k += step) {
+          if (arr[k] < arr[minIndex]) minIndex = k;
+        }
+        int tmp = arr[j];
+        arr[j] = arr[minIndex];
+        arr[minIndex] = tmp;
+      }
+    }
+  }
+}
+```
+
+跳跃式的移动，不稳定
+
+时间复杂度：O(n * log n)
+
+## 堆排序
