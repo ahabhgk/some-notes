@@ -117,9 +117,11 @@ private:
 
 静态链表其实是为了给没有指针的高级语言设计的一种实现单链表能力的方法
 
-### 动态（类似 go 的 slice）
+### 动态
 
-超出时再扩展
+go 的 slice、cpp 的 vector
+
+超出时再开新数组进行复制并扩展
 
 ### 循环链表
 
@@ -1313,4 +1315,248 @@ topologicalKeyRoad(Graph g) {
 时间复杂度：O(v + e)
 
 # 查找
+
+静态查找表：只做查找
+
+动态查找表：查找是同时插入或删除
+
+## 顺序表查找
+
+遍历一遍
+
+## 有序表查找
+
+### 二分法
+
+`mid = (low + high) / 2 = low + (high - low) / 2`
+
+### 插值查找
+
+根据查找关键字跟查找表中最大最小的关键字进行比较后的查找
+
+`mid = low + (high - low) * (key - a[low]) / (a[high] - a[low])`
+
+相较于二分法不再是每次分一半的查找，认为分布是均匀有序的，根据值分布的位置 `(key - a[low]) / (a[high] - a[low])` 进行查找
+
+### 斐波那契查找
+
+// TODO
+
+## 线性索引查找
+
+索引就是把一个关键字与它对应的内容相关联的过程
+
+索引按结构可分为线性索引、树形索引、多级索引
+
+线性索引：索引项集合组织为线性结构，也称索引表
+
+### 稠密索引
+
+在线性索引中，将数据集中的每个记录对应一个索引项，其索引表中的索引项一定按照关键码有序排列
+
+![dense-index](./images/dense-index.png)
+
+有序后可以使用有序表查找，大大提高查找效率
+
+### 分块索引
+
+把数据集分成若干块，块内无序（不要求有序，会付出大量时间和空间的代价），块间有序
+
+![block-index](./images/block-index.png)
+
+* 最大关键码
+
+* 块长
+
+* 块首指针
+
+先有序表查找，再顺序查找
+
+### 倒排索引
+
+例：两篇文章：
+
+1. Books and friends should be few but good.
+
+2. A good book is a good friend.
+
+|英文单词|文章编号|
+|-|-|
+|a|2|
+|and|1|
+|be|1|
+|book|1, 2|
+|but|1|
+|few|1|
+|friend|1, 2|
+|good|1, 2|
+|is|2|
+|should|1|
+
+索引项：次关键码（英文单词）、记录号表（文章编号）
+
+记录号表储存具有相同次关键字的所有记录的记录号（指针或主记录号）
+
+由于不是通过记录找属性，而是通过属性找记录，所以叫倒排索引
+
+有时还可以压缩属性（Android => < 3, roid> 或 /\w+roid/）
+
+## 二叉排序树
+
+Binary Sort Tree
+
+或者是一颗空树，或者是具有以下性质的二叉树
+
+* 若左子树不为空，则左子树上的值均小于根节点的值
+
+* 若右子树不为空，则右子树上的值均大于根节点的值
+
+* 左右子树均为二叉树
+
+```
+searchBST(BiTree t, T key) {
+  if (t == null) return null
+
+  if (t.data == key) {
+    return t
+  } else if (t.data > key) {
+    return searchBST(t.lchild, key)
+  } else if (t.data < key) {
+    return searchBST(t.rchild, key)
+  }
+}
+
+inseartBST(BiTree t, T key) {
+  if (t.data == key) return null
+
+  if (t.data > key) {
+    if (t.lchild == null) {
+      t.lchild = new BiTree({ data: key, lchild: null, rchild: null })
+    } else {
+      inseartBST(t.lchild, key)
+    }
+  } else if (t.data < key) {
+    if (t.rchild == null) {
+      t.rchild = new BiTreeNode({ data: key, lchild: null, rchild: null })
+    } else {
+      inseartBST(t.rchild, key)
+    }
+  }
+}
+
+deleteBST(BiTree t, T key) {
+  if (t == null) return null
+
+  if (t.data == key) delete(t)
+  else if (t.data > key) deleteBST(t.lchild, key)
+  else if (t.data < key) deleteBST(t.rchild, key)
+}
+
+delete(BiTree t) {
+  if (t.rchild == null) t = t.lchild // 若右子树为空则直接接上其左子树
+  else if (t.lchild == null) t = t.rchild // 若左子树为空则直接接上其右子树
+  else {
+    // 找到中序遍历（从小到大）的直接前驱或直接后驱 s 来替换 t
+    BiTree s = t.lchild
+    while (s.rchild != null) s = s.rchild
+    t.data = s.data
+    delete(s)
+  }
+}
+```
+
+![deleteBST](./images/deleteBST.png)
+
+时间复杂度与深度有关：O(h)
+
+## 平衡二叉树
+
+AVL 树
+
+当二叉排序树比较平横时，h == logn / 1 + 1 时间复杂度为 O(logn)；当二叉排序树退化成当单链表 h == n，时间复杂度为 O(n)
+
+// TODO
+
+## B 树
+
+// TODO
+
+## 哈希表
+
+存储位置 = f(关键字)
+
+在存储位置与关键字之间建立一个确定的对应关系 f，使每一个关键字对应一个存储位置
+
+散列函数：f，也称哈希（hash）函数
+
+散列表（哈希表）：存记录的存储空间
+
+冲突：key1 != key2，但是 hash(key1) == hash(key2)
+
+同义词：冲突中的 key1、key2
+
+### hash 函数的构造方法
+
+* 计算简单
+
+* 地址分布均匀
+
+1. 直接定址法
+
+    `hash(key) = a * key + b`
+
+    简单、均匀、无冲突，但需要知道关键字的分不情况，适合查找表较小且连续的情况
+
+2. 数字分析法
+
+3. 平方取中法
+
+    去平方抽取中间几位数
+
+4. 折叠法
+
+5. 除留余数法
+
+    散列表长 m `hash(key) == key % p (p <= m)`
+
+6. 随机数法
+
+### 处理冲突的方法
+
+1. 开放定址法
+
+    1. 线性探测法
+    
+        `fi(key) = (fi(key) + di) % p (di = 1, 2, ..., p - 1)`
+
+        堆积：不是同义词却需要争夺一个地址的情况
+
+    2. 二次探测法
+
+        `fi(key) = (fi(key) + di) % p (di = 1 ^ 2, - (1 ^ 2), ..., q ^ 2, - (q ^ 2)) (q <= m / 2)`
+
+        双向寻找可能的位置，防止关键字都聚集在某一片区域
+
+    3. 随机探测法
+
+        `fi(key) = (fi(key) + di) % p (di = 伪随机数列)`
+
+        查找时通过随机数种子找到
+
+2. 再散列函数法
+
+    `fi(key) = rfi(key) (i = 1, 2, ...)`
+
+    事先准备多个 f
+
+3. 链地址法
+
+    ![chain-address](./images/chain-address.png)
+
+4. 公共益处区法
+
+如果没有冲突，时间复杂度：O(1)
+
+# 排序
+
 
