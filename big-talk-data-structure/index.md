@@ -303,7 +303,7 @@ void inThreading(BiThrTree p) {
 
 相应逆操作省略
 
-### 树转 => 二叉树
+### 树 => 二叉树
 
 1. 加线
 
@@ -325,7 +325,7 @@ void inThreading(BiThrTree p) {
 
 树的路径长度：每个节点到根节点的路径长度之和
 
-**带权路径长度最小的二叉树（最优二叉树）**
+带权路径长度（路径长度 * 权值）最小的二叉树（最优二叉树）
 
 > 建立最优二叉树：对最小的两个结点求和，作为其父节点的值，递归直至得到根节点
 
@@ -1768,6 +1768,8 @@ sortAndMerge(Array leftArr, Array rightArr) {
 }
 ```
 
+是稳定的排序
+
 时间复杂度：sortAndMerge 需要 O(n)，slice 需要 O(log n)，所以总共 O(n log n)
 
 ## 快速排序
@@ -1864,5 +1866,4 @@ void quickSort(int arr[], int left, int right) {
     }
   } else insertSort(arr);
 }
-
 ```
