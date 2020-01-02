@@ -1641,6 +1641,8 @@ insertSort(Array arr) {
 
 ## 希尔排序
 
+直接插入排序的升级，都属于插入排序类
+
 基本有序：小的基本在前面，大的基本在后面，不等于局部有序
 
 通过一个增量，对相隔一个增量的元素组成的子序列进行简单选择排序，得到基本有序，通过逐渐减小增量得到全部有序
@@ -1669,3 +1671,198 @@ void shellSort(int * arr, int len) {
 时间复杂度：O(n * log n)
 
 ## 堆排序
+
+简单选择排序的升级，都属于选择排序类
+
+堆：完全二叉树，每个节点的值都大于或等于其左右孩子节点的值是大顶堆，每个节点的值都小于或等于其左右孩子节点的值是小顶堆
+
+根据完全二叉树的性质得到：
+
+`1 <= i <= (n / 2)`
+
+* 大顶堆：`t[i] >= t[2i] && t[i] >= t[2i + 1]`
+
+* 小顶堆：`t[i] <= t[2i] && t[i] <= t[2i + 1]`
+
+将待排序的序列构成一个大顶堆，之后将根与末尾节点交换，通过调整重新构造成大顶堆，重复后得到有序序列
+
+![build-heap](./images/build-heap.png)
+
+![heap](./images/heap.png)
+
+![sort-heap](./images/sort-heap.png)
+
+```cpp
+void heapSort(Array arr) {
+  for (int i = arr.length / 2; i > 0; i--) { // 先调整成堆
+    heapAdjust(arr, i, arr.length)
+  }
+
+  for (int i = arr.length; i > 1; i--) { // 把最大的放最后，调整成堆，最终得到从小到大的数组
+    arr.swap(1, i)
+    heapAdjust(arr, 1, i - 1)
+  }
+}
+
+void heapAdjust(Array arr, int toAdjust, int border) {
+  int toAdjustValue = arr[toAdjust]
+
+  for (int i = 2 * toAdjust; i <= border; i *= 2) {
+    if (i < border && arr[i] < arr[i + 1]) i += 1 // 找到两个子节点中最大的节点
+    if (toAdjustValue >= arr[i]) break // 如果满足堆，则说明找到正确的位置，break
+
+    // 没有找到正确位置，则继续向下调整，继续找
+    arr[toAdjust] = arr[i]
+    toAdjust = i
+  }
+
+  arr[toAdjust] = toAdjustValue
+}
+```
+
+跳跃式的排序，不稳定
+
+时间复杂度：构建堆 O(n)，排序要排 n - 1 次，第 i 次 O(log i)，所以排序一共 O(n log n)，总共 O(n log n + n) == O(n log n)
+
+## 归并排序
+
+![merging-sort](./images/merging-sort.png)
+
+```
+mergingSort(Array arr) {
+  return slice(arr, 0, arr.length - 1)
+}
+
+slice(Array arr, int left, int right) {
+  if (arr.length == 1) return arr
+
+  int mid = arr.length / 2
+
+  return sortAndMerge(slice(arr, left, mid), slice(arr, mid + 1, right))
+}
+
+sortAndMerge(Array leftArr, Array rightArr) {
+  Array result
+
+  int i = 0
+  int j = 0
+  
+  while (leftArr.length && rightArr.length) {
+    int min
+
+    if (leftArr[0] <= rightArr[0]) {
+      min = leftArr[0]
+      leftArr.shift()
+    } else {
+      min = rightArr[0]
+      rightArr.shift()
+    }
+
+    result.push(min)
+  }
+
+  while (leftArr.length) result.push(leftArr.shift())
+  while (rightArr.length) result.push(rightArr.shift())
+
+  return result
+}
+```
+
+时间复杂度：sortAndMerge 需要 O(n)，slice 需要 O(log n)，所以总共 O(n log n)
+
+## 快速排序
+
+冒泡排序的升级，都属于交换排序类
+
+通过一趟排序将待排元素分割成独立的两部分，其中一部分均比另一部分小，则可继续对这两部分进行排序，以达到整个序列有序
+
+```cpp
+int partition(int arr[], int left, int right) {
+  int pivotValue = arr[left];
+
+  while (left < right) {
+    while (left < right && arr[right] >= pivotValue)
+      right -= 1;
+    swap(arr, left, right);
+
+    while (left < right && arr[left] <= pivotValue)
+      left += 1;
+    swap(arr, left, right);
+  }
+
+  return left;
+}
+
+void quickSort(int arr[], int left, int right) {
+  if (left < right) {
+    int pivot = partition(arr, left, right);
+    quickSort(arr, left, pivot - 1);
+    quickSort(arr, pivot + 1, right);
+  }
+}
+```
+
+partition：
+
+![qs1](./images/qs1.png)
+
+![qs2](./images/qs2.png)
+
+![qs3](./images/qs3.png)
+
+![qs4](./images/qs4.png)
+
+![qs5](./images/qs5.png)
+
+![qs6](./images/qs6.png)
+
+优化：
+
+* 优化选取的 pivot：由于 pivot 可以随便选，如果每次都选的最大的数，就会退化成冒泡排序，所以选中等的数最优（通过抽取三个数，选中间的数作为 pivot）
+
+* 优化交换：使用替代只用一次赋值操作，而交换用三次
+
+* 优化小数组时的排序方案：使用了递归，在处理大量数据时可以忽略，但少量数据时会有浪费，在少量数据时（7、50、10，v8 的 Array.prototype.sort 是 10）使用直接插入排序（简单排序中性能最好）
+
+* 优化递归：迭代减少堆栈深度，将 `if` 改为 `while` 后，因为第一次使用递归后，left 就没用了，所以将 `pivot + 1` 赋值给 `left`，再循环后，下一次 `partition(arr, left, right)` 效果等于 `quickSort(arr, pivot + 1, right)`
+
+```cpp
+int partition(int arr[], int left, int right) {
+  int pivotValue = arr[left];
+
+  // 三数取中，保证 arr[left] 为 arr[right], arr[mid], arr[left] 的中间值
+  int mid = left + (left + right) / 2
+  if (arr[left] > arr[right]) swap(arr, left, right);
+  if (arr[mid] > arr[right]) swap(arr, mid, right);
+  if (arr[mid] > arr[left]) swap(arr, mid, left);
+
+  int temp = pivotValue // 优化交换
+  while (left < right) {
+    while (left < right && arr[right] >= pivotValue)
+      right -= 1;
+    arr[left] = arr[right]
+
+    while (left < right && arr[left] <= pivotValue)
+      left += 1;
+    arr[right] = arr[left];
+  }
+  arr[left] = temp;
+
+  return left;
+}
+
+// 小于 10 时用直接插入排序
+const int MAX_LENGTH_INSERT_SORT = 10;
+
+void quickSort(int arr[], int left, int right) {
+  if ((right - left) > MAX_LENGTH_INSERT_SORT) {
+    while (left < right) { // 迭代减少堆栈深度
+      int pivot = partition(arr, left, right);
+
+      quickSort(arr, left, pivot - 1);
+      left = pivot + 1;
+    }
+  } else insertSort(arr);
+}
+
+```
