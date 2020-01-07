@@ -248,3 +248,101 @@ FROM orderitems;
 
 存储过程
 
+简单安全高性能
+
+```sql
+DELIMITER // -- 使用 // 结束
+
+CREATE PROCEDURE Avg_wage()
+BEGIN
+  SELECT Avg(wage)
+  FROM staff;
+END //
+
+DELIMITER ; -- 改回使用 ;
+
+CALL Avg_wage(); -- 调用
+
+DROP PROCEDURE IF EXISTS Avg_wage;
+```
+
+```sql
+CREATE PROCEDURE show_sum_of_bigger_than_wage(
+  IN num INT,
+  OUT result INT)
+BEGIN
+  SELECT Sum(wage) -- 结果只能有一个数据
+  FROM staff
+  WHERE wage >= num
+  INTO result;
+END;
+
+CALL show_bigger_than_wage(1230, @sum_wages);
+SELECT @sum_wages;
+```
+
+```sql
+CREATE PROCEDURE ordertotal(
+  IN onumber INT,
+  IN taxable BOOLEAN,
+  OUT ototal DECIMAL(8, 2))
+COMMENT 'Obtain order total, optionally adding tax'
+BEGIN
+  DECLEAR total DECIMAL(8, 2);
+  DECLEAR taxrate INT DEFAULT 6;
+
+  SELECT Sum(item_price * quantity)
+  FROM orderitems
+  WHERE order_num = onumber
+  INTO total;
+
+  IF taxable THEN
+    SELECT total + (total / 100 * taxrate) INTO total;
+  END IF;
+
+  SELECT total INTO ototal;
+END;
+
+CALL ordertotal(20005, 0, @total) -- 0 == false, !0 == true
+```
+
+游标
+
+MySQL 中只能用于存储过程和函数
+
+```sql
+CREATE PROCEDURE processorders()
+BEGIN
+  DECLEAR done BOOLEAN DEFAULT 0;
+  DECLEAR o INT;
+  DECLEAR t DECIMAL(8, 2);
+
+  DECLEAR ordernumbers CURSOR
+  FOR
+  SELECT order_num FROM orders;
+
+  DECLEAR CONTINUE HANDLER FOR SQLSTATE '02000' SET done = 1; -- 当 order_num 为 02000 时，设置 done = 1
+
+  CREATE TABLE IF NOT EXISTS ordertotals(
+    order_num INT,
+    total DECIMAL(8, 2));
+
+  OPEN ordernumbers;
+
+  REPEAT
+    FETCH ordernumbers INTO o;
+    CALL ordertotal(o, 1, t);
+    INSERT INTO ordertotals(order_num, total)
+    VALUES (o, t);
+  UNTIL done END REPEAT;
+
+  CLOSE ordernumbers;
+END;
+```
+
+触发器
+
+DELETE、INSERT、UPDATE
+
+只有表支持，视图、临时表都不支持
+
