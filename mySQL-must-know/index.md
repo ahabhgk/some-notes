@@ -346,3 +346,59 @@ DELETE、INSERT、UPDATE
 
 只有表支持，视图、临时表都不支持
 
+```sql
+-- BEFORE 用于数据验证与净化
+CREATE TRIGGER neworder AFTER INSERT ON orders FOR EACH ROW SELECT NEW.order_num -- AUTO_INCRMENT 之后确定新生成的值，INSERT 时有一个 NEW 虚表
+
+CREATE TRIGGER deleteorder BEFORE DELETE ON orders
+FOR EACH ROW
+BEGIN
+  INSERT INTO archive_orders(order_num, order_date, cust_id)
+  VALUES (OLD.order_num, OLD.order_date, OLD.cust_id); -- DELETE 时有一个 OLD 虚表
+END; -- 可使用 BEGIN END 存储多条语句
+
+-- UPDATE 时有 NEW、OLD 虚表
+-- 所有操作中，NEW 可以更新，OLD 只读
+```
+
+事务
+
+* 事务(transaction)指一组SQL语句;
+
+* 回退(rollback)指撤销指定SQL语句的过程;
+
+* 提交(commit)指将未存储的SQL语句结果写入数据库表;
+
+* 保留点(savepoint)指事务处理中设置的临时占位符(place-holder)，你可以对它发布回退(与回退整个事务处理不同)。
+
+只能回退 UPDATE、DELETE、INSERT，不能回退 CREATE、DROP、SELECT
+
+一般使用隐式提交，事务中只能使用 COMMIT
+
+```sql
+START TRANSACTION;
+DELETE FROM orders WHERE order_num = 12000;
+DELETE FROM orders WHERE order_num = 12000; -- 执行出错，不会提交，操作会自动撤回
+COMMIT;
+
+-- 保留点
+SAVEPOINT delete1;
+ROLLBACK TO delete1;
+```
+
+安全管理
+
+```sql
+CREATE USER ben IDENTIFIED BY 'p@$$wOrd';
+RENAME USER ben TO bufer;
+DROP USER bufer;
+SHOW GRANTS FOR ben;
+GRANTS SELECT ON klass FOR bufer;
+SET PASSWORD FOR bufer = Password('n3w p@$$wOrd'); -- 不置顶 user 时是更改自己的密码
+```
+
+维护
+
+```sql
+FLUSH TABLES; -- 刷新，保证数据写入磁盘
+```
