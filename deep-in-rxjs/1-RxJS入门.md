@@ -128,6 +128,8 @@ const theObserver = {
 source$.subscribe(theObserver) // subscribe 事件发生，调用 onSubscribe
 ```
 
+> 类型上 Observer 是 interface，Subscriber 是对 Observer 的实现 class
+
 ### 跨越时间的 Observable
 
 Observable 用于发布事件，Observable 来做更合适
