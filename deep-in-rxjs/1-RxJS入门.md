@@ -129,3 +129,105 @@ source$.subscribe(theObserver) // subscribe 事件发生，调用 onSubscribe
 ```
 
 ### 跨越时间的 Observable
+
+Observable 用于发布事件，Observable 来做更合适
+
+```ts
+const source$ = new Observable(subscriber => {
+  let number = 1;
+  const timer = setInterval(() => {
+    if (number >= 3) clearInterval(timer)
+    else subscriber.next(number++)
+  }, 1000)
+})
+```
+
+### 永无止境的 Observale
+
+如果没有 clearInterval，数据流就不会终止，因为每次只吐出一个数据，然后被 subscriber 消化掉，所以内存不会增加。如果把所有的数据放到一个数组中，数组所占内存大小就会随数据的增加而增加
+
+大部分数据流会终止，上面例子中吐出 1 2 3 后就应该终止，但 Observable 如果只是停止吐出数据，只不过不再点用 next 推送，并不能给予 subscriber 一个终止信号，subscriber 依然准备着接收数据
+
+### Observable 的完结和错误处理
+
+```ts
+const source$ = new Observable(subscriber => {
+  let number = 1
+  const timer = setInterval(() => {
+    if (number >= 3) {
+      clearInterval(timer)
+      subscriber.complete() // 发出完结事件
+    }
+    else subscriber.next(number++)
+  }, 1000)
+})
+
+source$.subscribe(
+  console.log,
+  console.error, // 处理错误事件
+  () => console.log('done'), // 处理完结事件
+)
+```
+
+> next*(error|complete)?
+
+![observable](./images/observable.png)
+
+## 退订 Observable
+
+```ts
+const sleep = (time: number) => new Promise<never>(resolve => setTimeout(resolve, time))
+
+const observable = new Observable(function subscribe(subscriber) {
+  const intervalId = setInterval(() => {
+    console.log('interval...')
+    subscriber.next('hi')
+  }, 1000)
+})
+
+const subscription = observable.subscribe(x => console.log(x))
+
+await sleep(3500)
+subscription.unsubscribe() // 退订之后仍然打印 interval...
+```
+
+```ts
+const observable = new Observable(function subscribe(subscriber) {
+  const intervalId = setInterval(() => {
+    console.log('interval...')
+    subscriber.next('hi')
+  }, 1000)
+
+  return () => {
+    clearInterval(intervalId)
+  }
+})
+
+const subscription = observable.subscribe(x => console.log(x))
+
+await sleep(3500)
+subscription.unsubscribe() // 退订之后不再打印 interval...，return cleanUp 用来清除副作用
+```
+
+## Hot Observable 和 Cold Observable
+
+对于多个 Subscriber，比如第一个订阅 n 秒之后第二个在订阅，第二个是否接收错过 n 秒的数据
+
+对于不接收错过的 n 秒数据，叫做 Hot Observable，对于从头开始接收的，叫做 Cold Observable
+
+## operators
+
+* Pipeable operators：传入 Observable 返回新的 Observable
+
+* Creation Operators：可以传入一些预定义行为调用函数来创建新的 Observable，或通过加入其他 Observable
+
+```ts
+import { of } from 'rxjs'
+import { map } from 'rxjs/operators'
+
+map((x: number) => x * x)(of(1, 2, 3)).subscribe((v) => console.log(`value: ${v}`))
+```
+
+## 弹珠图
+
+![visualizer](./images/visualizer.png)
