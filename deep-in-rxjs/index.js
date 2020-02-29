@@ -1,12 +1,12 @@
-import { Observable, OperatorFunction, Observer, of, Subscriber } from "rxjs";
+const { Observable, of } = require("rxjs");
 // type OperatorFunction<T, R> = (source: Observable<T>) => Observable<R>
 
-function map<T, R>(project: (value: T) => R): OperatorFunction<T, R> {
-  return function mapOperation(source$: Observable<T>): Observable<R> {
+function map(project) {
+  return function mapOperation(source$) {
     if (typeof project !== "function") {
       throw new TypeError("argument is not a function...");
     }
-    return Observable.create((observer: Subscriber<R>) => {
+    return Observable.create((observer) => {
       const subscription = source$.subscribe({
         next: value => {
           try {
@@ -16,7 +16,7 @@ function map<T, R>(project: (value: T) => R): OperatorFunction<T, R> {
           }
         },
         error: observer.error,
-        complete: observer.complete,
+        complete: () => observer.complete(),
       });
       return () => {
         subscription.unsubscribe();
@@ -26,7 +26,4 @@ function map<T, R>(project: (value: T) => R): OperatorFunction<T, R> {
 }
 
 const source$ = of(1, 2, 3);
-const sub = map((x: number) => x * x)(source$).subscribe({
-  next: console.log,
-  complete: () => console.log('ok')
-});
+const sub = map((x) => x * x)(source$).subscribe(console.log);

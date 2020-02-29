@@ -2,6 +2,7 @@
   "name": "deep-in-rxjs",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "license": "MIT",
   "dependencies": {
     "rxjs": "^6.5.4"
