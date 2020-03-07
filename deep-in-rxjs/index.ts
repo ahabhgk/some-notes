@@ -1,4 +1,4 @@
-import { Observable, OperatorFunction, Observer, of, Subscriber } from "rxjs";
+import { Observable, OperatorFunction, Observer, of, Subscriber, Subject } from "rxjs";
 // type OperatorFunction<T, R> = (source: Observable<T>) => Observable<R>
 
 function map<T, R>(project: (value: T) => R): OperatorFunction<T, R> {
@@ -30,3 +30,5 @@ const sub = map((x: number) => x * x)(source$).subscribe({
   next: console.log,
   complete: () => console.log('ok')
 });
+
+const subject = new Subject()
