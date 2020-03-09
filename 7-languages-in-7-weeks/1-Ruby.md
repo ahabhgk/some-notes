@@ -143,6 +143,87 @@ class Person
 end
 
 Person.new('matz').to_f
-mixin tofile
+# mixin tofile
 ```
 
+可枚举（枚举模块）：让类可枚举，必须实现 each
+
+```ruby
+a = [5, 2, 4, 3, 1]
+b = a.sort # [1, 2, 3, 4, 5]
+a.any? {|i| i > 4} # true
+a.all? {|i| i > 4} # false
+c = a.collect {|i| i * 2} # [10, 4, 6, 8, 2]
+d = a.select {|i| i % 2 == 0} # [2, 4]
+a.member?(2) # true
+a.inject(10) do |acc, cur|
+  puts "acc: #{acc}, cur: #{cur}"
+  acc + cur
+end
+#  => 25
+```
+
+可比较（比较模块）：让类可比较，必须实现 <=>
+
+```ruby
+'same' <=> 'same' # 0
+```
+
+## 元编程：写能写程序的程序
+
+```ruby
+# rails
+class Department < ActiveRecord::Base
+  has_many :employees
+  has_one :manager
+end
+```
+
+开放类：可以对类重新定义
+
+```ruby
+class NilClass
+  def blank?
+    true
+  end
+end
+
+class String
+  def blank?
+    self.size == 0
+  end
+end
+
+["", "person", nil].each do |e|
+  puts e unless e.blank?
+end
+# "person"
+```
+
+method_missing：找不到默方法时调用，可以复写 method_missing 方法
+
+```ruby
+class Roman
+  def self.method_missing name, *args
+    roman = name.to_s
+    roman.gsub("IV", "IIII")
+    roman.gsub("IX", "VIIII")
+    roman.gsub("XL", "XXXX")
+    roman.gsub("XC", "LXXXX")
+
+    (roman.count("I") +
+     roman.count("V") * 5 +
+     roman.count("X") * 10 +
+     roman.count("L") * 50 +
+     roman.count("C") * 100)
+  end
+end
+
+puts Roman.XII # 12
+```
+
+动态的改变类：模块被另一模块包含，Ruby 就会调用该模块的 included 方法，类也是模块
+
+## think
+
+自由的语言
