@@ -155,7 +155,7 @@ function fnMiddleware(context, next) {
 // compose
 ```
 
-但是这样就忽略了 i 的作用，i 有两个作用，一个是作为 `middleware[i]` 推进 middleware，另一个是检查一个 middleware 中是否多次调用 next，Koa 没有使用这种方式也是为了保证 i 可以检查多次调用 next
+但是这样就忽略了 i 用来检查一个 middleware 中是否多次调用 next 的作用，Koa 没有使用这种方式也是为了保证 i 可以检查多次调用 next
 
 ```ts
 function dispatch (i) {
@@ -176,3 +176,209 @@ function dispatch (i) {
 }
 ```
 
+看完中间件机制再来看 http 请求从接受到响应就简单了，this.callback 返回的就是 http.createServer 的回调函数，所以 req res 从这里接收，之后 req res 进入 createContext 挂载到 ctx 对象上，之后把组合好的 fnMiddleware 和 ctx 传入 this.handleRequest，这里处理好 onerror 和 respond 之后开始把 ctx 传入 fnMiddleware，通过开发者编写的中间件对 req res 进行真正的处理，最后处理好后通过 `.then(() => respond(ctx))` 作出响应
+
+## 代理原生 req res
+
+我们对 ctx 上处理一般是对 ctx.request 和 ctx.response 处理，但 request response 只是对原生 req res 做的代理，最终的修改还是对 req res 的修改，我们通过几处看看这层代理有什么作用
+
+1. request 的 get 方法，这里为了那请求头的字段，对 referer 和 referrer 做了兼容
+
+    > Referer 的正确拼写是 Referrer，但是写入标准的时候，不知为何，没人发现少了一个字母 r。标准定案以后，只能将错就错，所有头信息的该字段都一律错误拼写成 Referer
+
+    ```ts
+    get(field) {
+      const req = this.req;
+      switch (field = field.toLowerCase()) {
+        case 'referer':
+        case 'referrer':
+          return req.headers.referrer || req. headers.referer || '';
+        default:
+          return req.headers[field] || '';
+      }
+    },
+    ```
+
+2. get set 中处理 req res，是开发者更方便的拿到一些数据
+
+    ```ts
+    get query() {
+      const str = this.querystring;
+      const c = this._querycache = this.  _querycache || {};
+      return c[str] || (c[str] = qs.parse(str)) ;
+    },
+
+    set query(obj) {
+      this.querystring = qs.stringify(obj);
+    },
+    ```
+
+    ```ts
+    set etag(val) {
+      if (!/^(W\/)?"/.test(val)) val = `"${val} "`;
+      this.set('ETag', val);
+    },
+
+    get etag() {
+      return this.get('ETag');
+    },
+    ```
+
+3. response 中 body 的处理，对于不同格式 body 的赋值，在 set 中对 type、length 等连同一起处理，方便开发者
+
+    ```ts
+    get body() {
+      return this._body;
+    },
+
+    set body(val) {
+      const original = this._body;
+      this._body = val;
+
+      // no content
+      if (null == val) {
+        if (!statuses.empty[this.status]) this. status = 204;
+        this.remove('Content-Type');
+        this.remove('Content-Length');
+        this.remove('Transfer-Encoding');
+        return;
+      }
+
+      // set the status
+      if (!this._explicitStatus) this.status =  200;
+
+      // set the content-type only if not yet   set
+      const setType = !this.has('Content-Type') ;
+
+      // string
+      if ('string' == typeof val) {
+        if (setType) this.type = /^\s*</.test (val) ? 'html' : 'text';
+        this.length = Buffer.byteLength(val);
+        return;
+      }
+
+      // buffer
+      if (Buffer.isBuffer(val)) {
+        if (setType) this.type = 'bin';
+        this.length = val.length;
+        return;
+      }
+
+      // stream
+      if ('function' == typeof val.pipe) {
+        onFinish(this.res, destroy.bind(null,   val));
+        ensureErrorHandler(val, err => this.  ctx.onerror(err));
+
+        // overwriting
+        if (null != original && original !=   val) this.remove('Content-Length');
+
+        if (setType) this.type = 'bin';
+        return;
+      }
+
+      // json
+      this.remove('Content-Length');
+      this.type = 'json';
+    },
+    ```
+
+4. response 中 redirect 的封装，context 中 cookie 的封装，提供一些封装好的方法
+
+    ```ts
+    redirect(url, alt) {
+      // location
+      if ('back' == url) url = this.ctx.get ('Referrer') || alt || '/';
+      this.set('Location', encodeUrl(url));
+
+      // status
+      if (!statuses.redirect[this.status])  this.status = 302;
+
+      // html
+      if (this.ctx.accepts('html')) {
+        url = escape(url);
+        this.type = 'text/html; charset=utf-8';
+        this.body = `Redirecting to <a href="$  {url}">${url}</a>.`;
+        return;
+      }
+
+      // text
+      this.type = 'text/plain; charset=utf-8';
+      this.body = `Redirecting to ${url}.`;
+    },
+    ```
+
+    ```ts
+    get cookies() {
+      if (!this[COOKIES]) {
+        this[COOKIES] = new Cookies(this.req,   this.res, {
+          keys: this.app.keys,
+          secure: this.request.secure
+        });
+      }
+      return this[COOKIES];
+    },
+
+    set cookies(_cookies) {
+      this[COOKIES] = _cookies;
+    }
+    ```
+
+5. 提供 toJSON 方便调试
+
+    ```ts
+    toJSON() {
+      return {
+        request: this.request.toJSON(),
+        response: this.response.toJSON(),
+        app: this.app.toJSON(),
+        originalUrl: this.originalUrl,
+        req: '<original node req>',
+        res: '<original node res>',
+        socket: '<original node socket>'
+      };
+    },
+    ```
+
+其他还有在 ctx 用 [delegate 库](https://github.com/tj/node-delegates)对一些常用数据直接代理到 ctx 对象上（ctx.body === ctx.response.body）
+
+## 错误处理
+
+官方有三种方式：
+
+1. 中间件中 `try/catch`
+
+2. 添加错误处理中间件（或使用默认的）
+
+3. 处理 error 事件（默认是打 log）
+
+第一种没什么好说的，第二种中默认的就是 `this.handleRequest` 中的 onerror，直接使用 `const onerror = err => ctx.onerror(err)` 处理，ctx.onerrer 会用 [statuses 库](https://github.com/jshttp/statuses)对 error.code 作出对应的响应信息，同时 ctx.onerror 还会触发（emit）error 事件（Application 继承 EventEmitter），app 默认的 `on('error', this.onerror)` 是对错误信息打 log
+
+一般默认的就够用了，如果有其他需求可以修改 app.onerror 或添加错误中间件处理
+
+```ts
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (err) {
+    // will only respond with JSON
+    ctx.status = err.statusCode || err.status || 500;
+    ctx.body = {
+      message: err.message
+    };
+  }
+})
+```
+
+这里相当于在第一个中间件 catch 之后中间件的错误，在 respond 之前处理好错误然后通过 respond 响应，错误就不会被之后 `.catch` 抓住，以此覆盖默认的 onerror
+
+## 流
+
+// TODO
+
+## 结语
+
+通过看 Koa 源码同时简单看了看相关依赖的库的源码，也算对以前不理解的地方有了更清晰的理解
+
+以前对 cookie、etag 什么的不知道到底怎么写的，现在发现其实就是对 node 的 req res 的修改，当然 node 底层也做了很多，但也算在一定抽象层次上明白了后端其实是对 req res 的处理，同时作出 side effect，复杂时就需要处理复杂情况
+
+还用中间件机制为什么 compose 与 FP 常写的 compose 很不一样，还有 i 对多次调用 next 的检查真的非常巧妙，真的非常佩服 TJ 大神
