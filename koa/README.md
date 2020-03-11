@@ -149,13 +149,56 @@ function fnMiddleware(context, next) {
 
 通过 fnMiddleware(ctx) 传入 context，各个 middleware 对 ctx 上的属性进行更改添加（ctx.body、ctx.type……）由于 ctx 对象传入 middlware context 参数的值是 ctx 的地址，所以之后的 middleware 中可以得到之前 middleware 中修改后的 ctx，内部调用 `await next()` 就是 resolve 下一个 middleware，这样就实现了 Koa 的洋葱模型机制
 
-我们也可以用更贴近 FP 的 compose 实现：
+我们发现这其实和 JS 的 FP 中 compose 很像，我们用 reduce 实现试试：
 
 ```ts
 // compose
+const compose = (fns) =>
+  (context, next) => fns.reduceRight(
+    (acc, cur) => Promise.resolve(cur(context, () => acc)),
+    Promise.resolve('resolve'),
+  )
+
+const sleep = (time) => new Promise(resolve => setTimeout(() => resolve(time), time))
+
+const ctx = { body: 0 }
+
+const middlewares = [
+  async (ctx, next) => {
+    ctx.body = 1
+    console.log(ctx.body) // 1
+    await next().then(() => {
+      ctx.body = 6
+      console.log(ctx.body) // 6
+    })
+  },
+  async (ctx, next) => {
+    await sleep(1000)
+    ctx.body = 2
+    console.log(ctx.body) // 2
+    await next().then(() => {
+      ctx.body = 5
+      console.log(ctx.body) // 5
+    })
+  },
+  async (ctx, next) => {
+    await sleep(1000)
+    ctx.body = 3
+    console.log(ctx.body) // 3
+    await next().then((r) => {
+      console.log(r)
+      ctx.body = 4
+      console.log(ctx.body) // 4
+    })
+  },
+]
+
+compose(middlewares)(ctx)
 ```
 
-但是这样就忽略了 i 用来检查一个 middleware 中是否多次调用 next 的作用，Koa 没有使用这种方式也是为了保证 i 可以检查多次调用 next
+这时发现只会停顿 1 秒，然后顺序也不对，而换成官方的 compose 就一切正常，停顿两秒同时顺序正确，这是因为 reduce 和 reduceRight 是同步的，只停顿一秒是因为两个 sleep 并行了（类似 `Promise.all([asyncFn1, asyncFn2])`）
+
+同时这样也可以通过 i 来检查一个 middleware 中是否多次调用 next 的作用，Koa 没有使用这种方式也是为了保证 i 可以检查多次调用 next
 
 ```ts
 function dispatch (i) {

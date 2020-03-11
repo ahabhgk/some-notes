@@ -6,10 +6,11 @@ var iisArray = function (value) {
 
 // reduce 模拟
 Array.prototype.ireduce = function (reducer, initialVal) {
+  let result = initialVal
   for (let i = 0; i < this.length; i++) {
-    initialVal = reducer(initialVal, this[i], i, this)
+    result = reducer(result, this[i], i, this)
   }
-  return initialVal
+  return result
 }
 
 const arr = [1, 2, 3, 4]
