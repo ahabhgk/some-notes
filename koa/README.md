@@ -98,6 +98,7 @@ handleRequest(ctx, fnMiddleware) {
 
 ```ts
 // respond
+// TODO
 ```
 
 ## 一条 http 请求：Koa 核心 - 异步中间件机制
@@ -196,7 +197,7 @@ const middlewares = [
 compose(middlewares)(ctx)
 ```
 
-这时发现只会停顿 1 秒，然后顺序也不对，而换成官方的 compose 就一切正常，停顿两秒同时顺序正确，这是因为 reduce 和 reduceRight 是同步的，只停顿一秒是因为两个 sleep 并行了（类似 `Promise.all([asyncFn1, asyncFn2])`）
+这时发现只会停顿 1 秒，然后顺序也不对，而换成官方的 compose 就一切正常，停顿两秒同时顺序正确，这是因为 reduce 和 reduceRight 是同步的，只停顿一秒是因为两个 sleep 并行了（类似 `Promise.all([asyncFn1, asyncFn2])`），Koa 中间件的特殊与对处理请求的进步点就在于此，不同于 express 和 redux 的中间件机制，Koa 实现的是**异步中间件**
 
 同时这样也可以通过 i 来检查一个 middleware 中是否多次调用 next 的作用，Koa 没有使用这种方式也是为了保证 i 可以检查多次调用 next
 
