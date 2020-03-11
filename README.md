@@ -13,3 +13,7 @@
 [大话数据结构](https://github.com/ahabhgk/some-notes/blob/master/big-talk-data-structure/index.md)
 
 [MySQL 必知必会](https://github.com/ahabhgk/some-notes/blob/master/mySQL-must-know/index.md)
+
+[深入浅出 RxJS](https://github.com/ahabhgk/some-notes/tree/master/deep-in-rxjs)
+
+[7 周 7 语言](https://github.com/ahabhgk/some-notes/tree/master/7-languages-in-7-weeks)
