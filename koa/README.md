@@ -1,5 +1,9 @@
 # Koa 源码分析
 
+Koa 由 express 同一个团队打造，目的是代替 express 成为下一代 Node.js 后端框架，Koa 由于十分简洁，其实更适合做一些框架的基础（egg.js、think.js），如今看来并不能代替 express，express 本身自带一些中间件支持，基于 express 编写的 nest 更是大而全，结合 TypeScript 写起来真的爽，虽然 Koa 用的人不如 express 多，但 Koa 确实有其进步的地方：支持 `async/await` 的异步中间件机制
+
+本文由创建服务开始，讲述了 `new Koa()` 到 `app.listen` Koa 所做的事，再由一条 http 请求详细介绍了 Koa 异步中间件机制，之后讲述对 ctx 的修改如何改动原生 req res，并带出一些 http 相关的知识，最后讲了 Koa 如何进行错误处理
+
 ## 创建服务
 
 ### new Koa() 实例化
@@ -98,7 +102,24 @@ handleRequest(ctx, fnMiddleware) {
 
 ```ts
 // respond
-// TODO
+function respond(ctx) {
+  // 判断是否同意 ctx.respond
+  // 204 205 304 忽略 body 的状态码
+  // 处理 HEAD 请求
+  // 处理 ctx.body == null
+
+  // responses
+  if (Buffer.isBuffer(body)) return res.end(body);
+  if ('string' == typeof body) return res.end(body);
+  if (body instanceof Stream) return body.pipe(res);
+
+  // body: json
+  body = JSON.stringify(body);
+  if (!res.headersSent) {
+    ctx.length = Buffer.byteLength(body);
+  }
+  res.end(body)
+}
 ```
 
 ## 一条 http 请求：Koa 核心 - 异步中间件机制
@@ -222,7 +243,7 @@ function dispatch (i) {
 
 看完中间件机制再来看 http 请求从接受到响应就简单了，this.callback 返回的就是 http.createServer 的回调函数，所以 req res 从这里接收，之后 req res 进入 createContext 挂载到 ctx 对象上，之后把组合好的 fnMiddleware 和 ctx 传入 this.handleRequest，这里处理好 onerror 和 respond 之后开始把 ctx 传入 fnMiddleware，通过开发者编写的中间件对 req res 进行真正的处理，最后处理好后通过 `.then(() => respond(ctx))` 作出响应
 
-## 代理原生 req res // FIX
+## request response 代理原生 req res
 
 我们对 ctx 上处理一般是对 ctx.request 和 ctx.response 处理，但 request response 只是对原生 req res 做的代理，最终的修改还是对 req res 的修改，我们通过几处看看这层代理有什么作用
 
@@ -385,6 +406,10 @@ function dispatch (i) {
 
 其他还有在 ctx 用 [delegate 库](https://github.com/tj/node-delegates)对一些常用数据直接代理到 ctx 对象上（ctx.body === ctx.response.body）
 
+### 引出的一些 http 协议知识点
+
+// TODO
+
 ## 错误处理
 
 官方有三种方式：
@@ -415,7 +440,7 @@ app.use(async (ctx, next) => {
 
 这里相当于在第一个中间件 catch 之后中间件的错误，在 respond 之前处理好错误然后通过 respond 响应，错误就不会被之后 `.catch` 抓住，以此覆盖默认的 onerror
 
-## 流
+## One more thing --- 流
 
 http 请求非常适合看作一个流，Koa 中 use 的中间件相当于一个管道，对 ctx 流的数据进行处理，处理完后 respond
 
@@ -445,7 +470,7 @@ ctx$.pipe(
 
 ## 结语
 
-使用 TypeScript 实现了一个简易版的 Koa，删减了很多 ctx 对 request response 的处理，只体现了核心思路，感兴趣可以看看：[ts-koa-core]()
+使用 TypeScript 实现了一个简易版的 Koa，删减了很多 ctx 对 request response 的处理，只体现了核心思路，感兴趣可以看看：[ts-koa-core](https://github.com/ahabhgk/ts-koa-core)
 
 通过看 Koa 源码同时简单看了看相关依赖的库的源码，也算对以前不理解的地方有了更清晰的理解
 
