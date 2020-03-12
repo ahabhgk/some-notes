@@ -3,15 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "build": "tsc"
-  },
   "keywords": [],
   "author": "ahabhgk",
   "license": "MIT",
   "devDependencies": {
     "@types/koa": "^2.11.2",
-    "@types/node": "^13.9.0",
-    "typescript": "^3.8.3"
+    "@types/node": "^13.9.0"
   }
 }
