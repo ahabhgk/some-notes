@@ -72,3 +72,7 @@ function respond<T extends Context = Context>(ctx: T) {
   else if (body instanceof Object) return res.end(JSON.stringify(body))
   else return res.end(body)
 }
+
+function compose(...args: any) {
+  return 1 as unknown as ComposedMiddleware
+}

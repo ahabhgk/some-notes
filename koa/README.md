@@ -222,7 +222,7 @@ function dispatch (i) {
 
 看完中间件机制再来看 http 请求从接受到响应就简单了，this.callback 返回的就是 http.createServer 的回调函数，所以 req res 从这里接收，之后 req res 进入 createContext 挂载到 ctx 对象上，之后把组合好的 fnMiddleware 和 ctx 传入 this.handleRequest，这里处理好 onerror 和 respond 之后开始把 ctx 传入 fnMiddleware，通过开发者编写的中间件对 req res 进行真正的处理，最后处理好后通过 `.then(() => respond(ctx))` 作出响应
 
-## 代理原生 req res
+## 代理原生 req res // FIX
 
 我们对 ctx 上处理一般是对 ctx.request 和 ctx.response 处理，但 request response 只是对原生 req res 做的代理，最终的修改还是对 req res 的修改，我们通过几处看看这层代理有什么作用
 
@@ -417,9 +417,35 @@ app.use(async (ctx, next) => {
 
 ## 流
 
-// TODO
+http 请求非常适合看作一个流，Koa 中 use 的中间件相当于一个管道，对 ctx 流的数据进行处理，处理完后 respond
+
+结合 RxJS 的伪代码：
+
+```ts
+const server = http
+  .createServer()
+  .listen(8080, () => console.log('Server is running on port 8080...'))
+
+const server$ = fromEvent<[IncomingMessage, ServerResponse]>(server, 'request')
+const ctx$ = server$.pipe(map(([req, res]) => ({ req, res })))
+
+ctx$.pipe(
+  map(routerMiddleware),
+  map(controllerMiddleware),
+  map(serverMiddleware),
+  map(errorHandlerMiddleware),
+).subscribe({
+  next: respond,
+  error: defaultErrorHandler,
+  complete: defaultCompleteHandler,
+})
+```
+
+当然非常不完整，只是一个想法的体现，其实已经有人实现了用 RxJS 的后端框架：[marblejs](https://github.com/marblejs/marble)，当然我们还是要结合实际进行选择
 
 ## 结语
+
+使用 TypeScript 实现了一个简易版的 Koa，删减了很多 ctx 对 request response 的处理，只体现了核心思路，感兴趣可以看看：[ts-koa-core]()
 
 通过看 Koa 源码同时简单看了看相关依赖的库的源码，也算对以前不理解的地方有了更清晰的理解
 
