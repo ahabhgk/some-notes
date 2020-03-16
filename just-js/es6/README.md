@@ -854,7 +854,7 @@ Decorator 提案经过了大幅修改，现在还没有定下来，随便看看�
 
 * Reflect：存有对象行为信息，一般配合 Proxy 使用
 
-ES6 增强了这些能力，而且有本质上的增强，从 Proxy 的 polyfill 只能实现部分功能就可以看出。现在 Proxy 的应用有 Vue3、Mobx 的响应式、[Immer.js](https://zhuanlan.zhihu.com/p/33507866) 使用 mutable 写法写 immutable 数据
+ES6 增强了这些能力，而且有本质上的增强，从 Proxy 的 polyfill 只能实现部分功能就可以看出。现在 Proxy 的应用有 Vue3、Mobx 的响应式、[Immer.js](https://github.com/immerjs/immer) 使用 mutable 写法写 immutable 数据
 
 ES6 之前也是有元编程的能力的：
 
@@ -911,5 +911,7 @@ JSONcache
 [JavaScript DSL示例](https://www.phodal.com/blog/javascript-dsl-example/)
 
 [JavaScript 元编程之ES6 Proxy](https://www.phodal.com/blog/javascript-dsl-meta-programming-use-proxy/)
+
+[immer.js 简介及源码简析](https://zhuanlan.zhihu.com/p/33507866)
 
 [七周七语言](https://book.douban.com/subject/10555435/)
