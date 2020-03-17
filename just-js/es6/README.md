@@ -2,11 +2,13 @@
 
 原则：
 
-1. 不讲 APIs，看看有个印象就行，用到再查
+1. 尽量不讲 APIs，APIs 看看有个印象就行，用到再查
 
-2. 我尽量扩展，所以涉及很多现在不需要的知识，会提到很多以后可能用到的库，看看就好（希望你们以后对于库能关注原理）
+2. 尽量扩展，所以涉及很多现在不需要的知识，会提到很多以后可能用到的库，看看就好（希望以后对于库能关注其实现原理）
 
 大部分都是语法糖，但是语法糖很重要，因为语法糖可以提升 DX（更开心的写代码）
+
+> 语法糖：旨在使内容更易阅读，但不引入任何新内容的语法
 
 ## 一堆扩展
 
@@ -412,6 +414,8 @@ class Person {
 
 export default Person
 ```
+
+## 迭代器（Iterator）和生成器（Generator）
 
 ### Iterator 和 for...of 循环
 
@@ -868,31 +872,194 @@ ES6 之前也是有元编程的能力的：
 
 ```ts
 // Proxy 通过实现 method_missing
-// 缓存 JSON 的一种 DSL
 let handler = {
   get: function(target, name) {
     if (!Reflect.has(target, name)) {
-      target[name] = JSON.parse(name)
+      return 'method_missing XvX you can do some hacking functions at here...'
     }
-    return target[name]
+    return Reflect.get(target, name)
   }
 }
 
-let JSONcache = new Proxy({ a: 1 }, handler)
-JSONcache.a // 1
-JSONcache['{"name":"lj","age":6}'] // {"name":"lj","age":6}
-JSONcache
-// Proxy {
-//   a: 1,
-//   '{"name":"lj","age":6}': {"name":"lj","age":6},
-// }
+let { proxy, revoke } = Proxy.revocable({ a: 1 }, handler)
+proxy.b // 'method_missing XvX you can do some hacking functions at here...'
+proxy.a // 1
+
+revoke() // 撤销代理
+proxy.a // TypeError: Revoke
 ```
 
-## class？模版？
+## class？语法糖？模版？
 
-// TODO
+JS 的 OOP 是基于原型的，不同于工业常用的基于类的，虽然 ES6 添加了一些 class 的东西，但本质还是原型
+
+~~Io~~ JS 没有类，只需要与对象打交道，必要时把对象复制（~~Object clone~~ Object.create）一下就行，这些被复制的对象叫原型，原型语言中，每个对象都不是类的复制品，而是一个实实在在的对象
+
+```ts
+let Vehicle = Object.create(Object.prototype) // {}，等价于 let Vehicle = {}
+Vehicle.drive = 'gogogo'
+let Car = Object.create(Vehicle) // Car.__proto__ === Object.getPrototypeOf(Car) === Vehicle
+Car.drive = 'dididi'
+let aodi = Object.create(Car)
+aodi.sayAodi = function () {
+  console.log('AODI!!!')
+}
+aodi.drive // 'dididi'
+```
+
+我们实现的就是一个 Vehicle，Car 继承 Vehicle，aodi 是 Car 的一个实例（注意我们自定的规范：小写是实例）
+
+![aodi](./images/aodi.png)
+
+再以一种~~扯~~常见一点的写法（“经典”组合式创建和寄生组合式继承）：
+
+```ts
+function Vehicle() {}
+Vehicle.prototype.drive = 'gogogo'
+
+function Car(...args) {
+  Vehicle.apply(this, args) // 调用父类构造函数
+}
+Car.prototype = Object.create(Vehicle.prototype) // 继承，链接原型链
+Car.prototype.constructor = Car // 修正 constructor
+
+Car.prototype.drive = 'dididi'
+
+let aodi = new Car()
+aodi.sayAodi = function () {
+  console.log('AODO!!!')
+}
+```
+
+![aodiConstructor](./images/aodiConstructor.png)
+
+做了与之前同样的事，只不过用了构造函数，来看看 class 写法：
+
+```ts
+class Vehicle {
+  drive() { // 由于不能直接给原型添加属性，所以用方法代替
+    console.log('gogogo')
+  }
+}
+
+class Car extends Vehicle {
+  dirve() {
+    console.log('dididi')
+  }
+}
+
+let aodi = new Car()
+aodi.sayAodi = function () { // 为了不影响其他 Car 实例，所以直接在这里添加
+  console.log('AODI!!!')
+}
+```
+
+![aodiClass](./images/aodiClass.png)
+
+原型链的本质：一个单向链表，没有的方法和属性沿着这条单向链表寻找，直到找到或遇到 null 为止
+
+对比第一种和第二种，第二种是对于基于类的一种模拟，第一种才是基于原型语言中常用的写法，至于为什么更常用于第一种，大概是 JS 的历史问题吧（同 JS 为什么叫 JavaScript）
+
+对比第二种和第三种，明显感觉第三种更为清晰，可读性更好，像是以一种基于类的模版写基于原型的 OOP，但同是也可以感受到少了一些灵活性，所以语法糖并不一定能提升语言的表达力，而主要是为了开发者的便利而设计的
+
+但是 class 和 class extends 虽是“组合式创建”和“寄生组合式继承”的语法糖，但有些表现也是不同的，寄生组合式继承子类的 this 是自己的，然后调用父类构造函数在 this 上，而 class extends 中子类的 this 是父类传给子类的，所以[寄生组合式不能继承原生对象，而 class extends 可以](https://segmentfault.com/a/1190000012841509)
+
+### 语法
+
+```ts
+class Vehicle {
+  isVehicle = true
+
+  constructor() { // 构造函数
+    if (new.target === Vehicle) { // new.target 指向 new 的那个类（new Car 的话就指向 Car），可以用来实现抽象类
+      throw new Error('本类不能实例化')
+    }
+  }
+
+  static isVehicle(vehicle) { // 静态方法，相当于 Car.isCar，在构造函数上，所以不能访问 this
+    return vehicle.isVehicle
+  }
+
+  drive() { // 方法，相当于 Car.prototype.drive
+    console.log('gogogo')
+  }
+}
+
+class Car extends Vehicle {
+  isCar = true // 属性，相当于 this.isCar
+  #price = 0 // 私有属性
+
+  constructor(name) {
+    super() // 相当于父类构造函数，对应 Vehicle.apple(this)，但实际上是拿到父类的 this
+    this.name = name
+  }
+
+  set price(value) { // setter
+    this.#price = value
+  }
+
+  get price() { // getter
+    return this.#price
+  }
+
+  static isCar(car) {
+    return super.isVehicle(car) && car.isCar // super 只有在 static 中才相当于父类构造函数，Vehicle.isVehicle
+  }
+
+  drive() {
+    super.drive() // 这里 super 相当于父类的原型，Vehicle.prototype
+    console.log('dididi')
+  }
+}
+```
+
+## 模块化
+
+* CommonJS 模块输出的是一个值的拷贝，ES6 模块输出的是值的引用
+
+* CommonJS 模块是运行时加载，ES6 模块是编译时输出接口
+
+ES6 的模块自动采用严格模式
+
+常用就两种：
+
+```ts
+// xxx.js
+const a = 1
+export default a
+
+// main.js
+import a from './xxx.js'
+```
+
+```ts
+// xxx.js
+export const a = 1
+
+// main.js
+import { a } from './xxx.js'
+```
+
+## 编码风格
+
+推荐 airbnb 的[编码风格规范](https://github.com/airbnb/javascript)
+
+使用 Lint 工具：ESLint、VSCode ESLint 插件
+
+```shell
+npm install -g eslint
+# 进入你的项目的文件夹中
+eslint --init
+# 根据你的需要选择就好
+```
+
+## 作业
+
+* Level 1：
 
 ## ref
+
+[ES6 入门教程](https://es6.ruanyifeng.com/)
 
 [TypeScript 版图解 Functor, Applicative 和 Monad](https://juejin.im/post/5d6298c75188255625591ae6)
 
@@ -915,3 +1082,5 @@ JSONcache
 [immer.js 简介及源码简析](https://zhuanlan.zhihu.com/p/33507866)
 
 [七周七语言](https://book.douban.com/subject/10555435/)
+
+[进阶必读：深入理解 JavaScript 原型](https://zhuanlan.zhihu.com/p/87667349)
