@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "co": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/co": "^4.6.2",
+    "typescript": "^3.8.3"
+  }
+}
