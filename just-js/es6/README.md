@@ -516,14 +516,6 @@ for (let x of obj) {
 
 ### Generator 函数的语法
 
-> 如何判断一个函数是 generator 函数：[is-generator-function](https://github.com/ljharb/is-generator-function/)
->
-> 1. 通过正则匹配 toString 后的 *
->
-> 2. 通过 Symbol.toStringTag 判断
->
-> 3. 通过 getPrototypeOf 判断函数的 \_\_proto\_\_ 和 (function * () {}).\_\_proto\_\_ 是否 ===
-
 Generator 返回一个 Iterator（有 next、return、throw 三个方法）
 
 这三个方法都可以传入参数：它们的作用都是让 Generator 函数恢复执行，并且使用不同的语句替换 yield 表达式
@@ -670,9 +662,9 @@ async function* run() {
 const asyncIterator = run();
 
 // The function doesn't start running until you call `next()`
-asyncIterator.next().
-  then(obj => console.log(obj.value)). // Prints "Hello"
-  then(() => asyncIterator.next());  // Prints "World"
+asyncIterator.next()
+  .then(obj => console.log(obj.value)) // Prints "Hello"
+  .then(() => asyncIterator.next()) // Prints "World"
 ```
 
 ## 元编程与 DSL
