@@ -19,8 +19,11 @@ this.response = Object.create(response);
 
 ### app.use(fn) 添加中间件
 
+> 如何判断一个函数是 generator 函数：[is-generator-function](https://github.com/ljharb/is-generator-function/)
+
 ```ts
 use(fn) {
+  // 兼容 v1 Generator，判断 fn 是不是 generator，是则通过 koa-convert 用 co 进行处理
   this.middleware.push(fn)
   return this
 }
@@ -245,7 +248,9 @@ function dispatch (i) {
 
 ## request response 代理原生 req res
 
-我们对 ctx 上处理一般是对 ctx.request 和 ctx.response 处理，但 request response 只是对原生 req res 做的代理，最终的修改还是对 req res 的修改，我们通过几处看看这层代理有什么作用
+我们对 ctx 上处理一般是对 ctx.request 和 ctx.response 处理，但 request response 只是对原生 req res 通过 \_\_defineGetter\_\_ 和 \_\_defineSetter\_\_ 做的代理，最终的修改还是对 req res 的修改，我们通过几处看看这层代理有什么作用
+
+> \_\_defineGetter\_\_、\_\_defineSetter\_\_ 并不是标准，不推荐使用
 
 1. request 的 get 方法，这里为了那请求头的字段，对 referer 和 referrer 做了兼容
 
