@@ -649,7 +649,7 @@ async 函数的返回值是 Promise 对象，进一步说，async函数完全可
 
 * `function* () {}`
 
-* `async function* () {}` 返回 Iterator，但是调用 next 后返回一个 Promise
+* `async function* () {}` 返回 Iterator，但是调用 next 后返回一个 Promise，then cb 的参数是带有 next、done 属性的对象
 
 ```ts
 async function* run() {
