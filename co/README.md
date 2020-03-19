@@ -1,4 +1,4 @@
-# co 源码分析
+# co 与异步的一些思考
 
 JavaScript 的异步编程发展经过了四个阶段：
 
@@ -146,6 +146,18 @@ function isPromise(obj) {
 }
 ```
 
-## async / await
+## 原理
 
-## WHY
+co 的原理其实是通过 iter.next() 得到 iterResult，由于 yield 出是一个 promise，通过 iterResult.value.then 再把 promise 的结果通过 iter.next 的参数传给 yield 的左边，让 generator 自动执行，通过 iterResult.done 判断是否执行结束
+
+## 思考
+
+我们看最开始最朴素的 raw callback style，是将 callback 交给另一个函数执行，也就是说我们把 callback 的控制权交给这个函数，这个函数在进行完异步操作之后调用 callback，以此实现异步
+
+而之后 promise 也是通过传入 callback 的方式，只不过把之前嵌套式的形式展开成链式，其实通过链表为函数增加 next 属性，也可以使嵌套式展开成链式。promise 通过完成异步操作后进行 resolve 或 reject，来控制 callback 的执行，而且提供了 then 返回一个 promise 的自动进行 flat（flatMap），实现了 then 中继续执行异步的操作，所以提供 callback 参数对于 promise 来说也是一种控制权的转移，只不过是从以前直接的函数调用改成了 resolve、reject 控制 callback 的调用时机
+
+GeneratorFunction 得到的 Generator 可以通过 next 打断 GeneratorFunction 的执行，由于只能通过 Generator 调用 next 把 GeneratorFunction 的执行权还给 GeneratorFunction，所以称作“半协程”，通过保存 GeneratorFunction 的执行上下文，使 GeneratorFunction 可中断执行，从而把 GeneratorFunction 控制权交给 Generator，Generator 拿到控制权后通过 yield 出来的 promise 完成异步操作，等 resolve 之后再通过 then 中调用 next 把异步的结果和 GeneratorFunction 的控制权交给 GeneratorFunction，以继续执行 yield 后的操作
+
+async 函数是对 GeneratorFunction + co 的语义化和标准化的语法糖
+
+所以异步的关键就在于调用 callback 的时机，因为我们不知道异步操作需要多少时间，我们自然也就不知道何时调用异步之后的操作，所以我们通过 callback 将之后操作的控制权交给异步操作，在异步操作完成之后自动调用 callback，就完成了在合适的时机进行合适的操作
