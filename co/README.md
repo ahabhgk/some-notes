@@ -38,12 +38,12 @@ function* gen() {
   console.log(bar)
 }
 
-const iter = gen()
+const gen = gen()
 // next 出来的 value 是个 Promise.resolve(1)
-iter.next().value.then((data) => {
+g.next().value.then((data) => {
   // 想让 yield 左边的变量拿到 Promise.resolve 的值，就要在下一次 next 传入 data
-  iter.next(data).value.then((data) => {
-    iter.next(data)
+  g.next(data).value.then((data) => {
+    g.next(data)
   })
 })
 ```
@@ -54,20 +54,20 @@ iter.next().value.then((data) => {
 function co(gen) {
   // ...
   return new Promise((resolve, reject) => {
-    const iter = gen()
+    const g = gen()
 
-    const iterResult = iter.next() // 第一次 next
-    if (iterResult.done) resolve(iterResult.value)
-    if (iterResult.value && isPromise(iterResult.value)) {
+    const gResult = g.next() // 第一次 next
+    if (gResult.done) resolve(gResult.value)
+    if (gResult.value && isPromise(gResult.value)) {
       value.then((res) => {
 
-        const iterResult = iter.next(res) // 第二次 next
-        if (iterResult.done) resolve(iterResult.value)
-        if (iterResult.value && isPromise(iterResult.value)) {
+        const gResult = g.next(res) // 第二次 next
+        if (gResult.done) resolve(gResult.value)
+        if (gResult.value && isPromise(gResult.value)) {
           value.then((res) => {
 
-            const iterResult = iter.next(res) // 第三次 next，done 为 true
-            if (iterResult.done) resolve(iterResult.value) // resolve 掉 generator 中 return 的结果
+            const gResult = g.next(res) // 第三次 next，done 为 true
+            if (gResult.done) resolve(gResult.value) // resolve 掉 generator 中 return 的结果
           })
         }
       })
@@ -148,16 +148,18 @@ function isPromise(obj) {
 
 ## 原理
 
-co 的原理其实是通过 iter.next() 得到 iterResult，由于 yield 出是一个 promise，通过 iterResult.value.then 再把 promise 的结果通过 iter.next 的参数传给 yield 的左边，让 generator 自动执行，通过 iterResult.done 判断是否执行结束
+co 的原理其实是通过 generator.next() 得到 generatorResult，由于 yield 出是一个 promise，通过 generatorResult.value.then 再把 promise 的结果通过 generator.next 的参数传给 yield 的左边，让 generator 自动执行，通过 generatorResult.done 判断是否执行结束
 
 ## 思考
 
 我们看最开始最朴素的 raw callback style，是将 callback 交给另一个函数执行，也就是说我们把 callback 的控制权交给这个函数，这个函数在进行完异步操作之后调用 callback，以此实现异步
 
-而之后 promise 也是通过传入 callback 的方式，只不过把之前嵌套式的形式展开成链式，其实通过链表为函数增加 next 属性，也可以使嵌套式展开成链式。promise 通过完成异步操作后进行 resolve 或 reject，来控制 callback 的执行，而且提供了 then 返回一个 promise 的自动进行 flat（flatMap），实现了 then 中继续执行异步的操作，所以提供 callback 参数对于 promise 来说也是一种控制权的转移，只不过是从以前直接的函数调用改成了 resolve、reject 控制 callback 的调用时机
+而之后 promise 也是通过传入 callback 的方式，只不过把之前嵌套式的形式展开成链式，其实通过链表为函数增加 next 属性，也可以使嵌套式展开成链式。promise 通过完成异步操作后进行 resolve 或 reject，来控制 callback 的执行，而且提供了 then 返回一个 promise 的自动进行 flat（flatMap），实现了 then 中继续执行异步的操作，所以提供 callback 参数对于 promise 来说也是一种控制权的转移，只不过是从以前直接的函数调用改成了 resolve、reject 控制 callback 的调用时机，同时是一种标准的实现也相较于原来的 raw callback style 保证了内部的可控性
 
 GeneratorFunction 得到的 Generator 可以通过 next 打断 GeneratorFunction 的执行，由于只能通过 Generator 调用 next 把 GeneratorFunction 的执行权还给 GeneratorFunction，所以称作“半协程”，通过保存 GeneratorFunction 的执行上下文，使 GeneratorFunction 可中断执行，从而把 GeneratorFunction 控制权交给 Generator，Generator 拿到控制权后通过 yield 出来的 promise 完成异步操作，等 resolve 之后再通过 then 中调用 next 把异步的结果和 GeneratorFunction 的控制权交给 GeneratorFunction，以继续执行 yield 后的操作
 
-async 函数是对 GeneratorFunction + co 的语义化和标准化的语法糖
+async 函数是对 GeneratorFunction + co 的语义化和标准化的语法糖，便捷性提升的同时也意味着灵活性的减少，由于 async / await 是语法，而 promise、callback 是对象，对象可以到处传递，React 也通过 throw 一个 promise 如此 creative and hacking 的模拟了 [Algebraic Effects](https://overreacted.io/algebraic-effects-for-the-rest-of-us/) 实现 Suspense
 
-所以异步的关键就在于调用 callback 的时机，因为我们不知道异步操作需要多少时间，我们自然也就不知道何时调用异步之后的操作，所以我们通过 callback 将之后操作的控制权交给异步操作，在异步操作完成之后自动调用 callback，就完成了在合适的时机进行合适的操作
+// TODO: RxJS 与 async 区别，RxJS 理念等
+
+异步的关键就在于调用 callback 的时机，因为我们不知道异步操作需要多少时间，我们自然也就不知道何时调用异步之后的操作，所以我们通过 callback 将之后操作的控制权交给异步操作，实现控制反转，在异步操作完成之后自动调用 callback，就完成了在合适的时机进行合适的操作
