@@ -158,7 +158,7 @@ co 的原理其实是通过 generator.next() 得到 generatorResult，由于 yie
 
 GeneratorFunction 得到的 Generator 可以通过 next 打断 GeneratorFunction 的执行，由于只能通过 Generator 调用 next 把 GeneratorFunction 的执行权还给 GeneratorFunction，所以称作“半协程”，通过保存 GeneratorFunction 的执行上下文，使 GeneratorFunction 可中断执行，从而把 GeneratorFunction 控制权交给 Generator，Generator 拿到控制权后通过 yield 出来的 promise 完成异步操作，等 resolve 之后再通过 then 中调用 next 把异步的结果和 GeneratorFunction 的控制权交给 GeneratorFunction，以继续执行 yield 后的操作
 
-async 函数是对 GeneratorFunction + co 的语义化和标准化的语法糖，便捷性提升的同时也意味着灵活性的减少，由于 async / await 是语法，而 promise、callback 是对象，对象可以到处传递，React 也通过 throw 一个 promise 如此 creative and hacking 的模拟了 [Algebraic Effects](https://overreacted.io/algebraic-effects-for-the-rest-of-us/) 实现 Suspense
+async 函数是对 GeneratorFunction + co 的语义化和标准化的语法糖，便捷性提升的同时也意味着灵活性的减少，由于 async / await 是语法，而 promise、callback 是对象，对象可以到处传递，React 也通过 throw 一个 promise 如此 creative and hacking 的模拟了 [Algebraic Effects](https://overreacted.io/algebraic-effects-for-the-rest-of-us/) 实现 Suspense。而 Promise 和 GeneratorFunction 也有约束，Promise 是 onFulfilled、onRejected 的约束，GeneratorFunction 是 next、done 的约束，Node.js APIs 中也限制了 cb 的参数，所以也能被统一的 thunk 化，这种约束类似于语法糖，规范的同时也丧失了些许灵活性
 
 // TODO: RxJS 与 async 区别，RxJS 理念等
 
