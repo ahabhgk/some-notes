@@ -163,3 +163,11 @@ async 函数是对 GeneratorFunction + co 的语义化和标准化的语法糖�
 // TODO: RxJS 与 async 区别，RxJS 理念等
 
 异步的关键就在于调用 callback 的时机，因为我们不知道异步操作需要多少时间，我们自然也就不知道何时调用异步之后的操作，所以我们通过 callback 将之后操作的控制权交给异步操作，实现控制反转，在异步操作完成之后自动调用 callback，就完成了在合适的时机进行合适的操作
+
+## ref
+
+[Generator 函数的异步应用](https://es6.ruanyifeng.com/#docs/generator-async)
+
+[100 行代码实现 Promises/A+ 规范](https://zhuanlan.zhihu.com/p/83965949)
+
+[JAVASCRIPT GETTER-SETTER PYRAMID](https://staltz.com/javascript-getter-setter-pyramid.html)

@@ -226,7 +226,7 @@ const go = function* () {
 
 Array.from方法用于将两类对象转为真正的数组：类似数组的对象（array-like object）和可遍历（iterable）的对象（包括 ES6 新增的数据结构 Set 和 Map）
 
-所谓类似数组的对象，本质特征只有一点，即必须有length属性
+所谓类似数组的对象，本质特征只有一点，即必须有 length 属性，会根据 length 创建数组长度，`'0', '1', '2'` 这样的最为数组的下标加入数组，其他的舍去，length 多的话为 empty，少的话就舍去
 
 ```ts
 let arrayLike = {
