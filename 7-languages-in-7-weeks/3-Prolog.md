@@ -103,3 +103,40 @@ Head = c
 Tail = [d, e]
 ```
 
+```prolog
+count(0, []).
+count(Count, [_| Tail]) :- count(TailCount, Tail), Count is TailCount + 1.
+
+sum(0, []).
+sum(Total, [Head| Tail]) :- sum(Sum, Tail), Total is Head + Sum.
+
+average(Average, List) :- sum(Sum, List), count(Count, List), Average is Sum / Count.
+```
+
+```prolog
+append([], List, List).
+append([Head| List1], List2, [Head| Tail]) :- append(List1, List2, Tail).
+```
+
+```shell
+?- append(L1, L2, [1, 2, 3, 1, 5]).
+L1 = [],
+L2 = [1, 2, 3, 1, 5] ;
+L1 = [1],
+L2 = [2, 3, 1, 5] ;
+L1 = [1, 2],
+L2 = [3, 1, 5] ;
+L1 = [1, 2, 3],
+L2 = [1, 5] ;
+L1 = [1, 2, 3, 1],
+L2 = [5] ;
+L1 = [1, 2, 3, 1, 5],
+L2 = [] ;
+false
+```
+
+例：八皇后、数独
+
+## think
+
+**逻辑**编程
