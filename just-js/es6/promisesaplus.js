@@ -22,9 +22,6 @@ function Promise(executor) {
   self.onRejectedCallbacks = []
 
   function resolve(value) {
-    if (value instanceof Promise) {
-      return value.then(resolve, reject)
-    }
     // 为什么 resolve 加 setTimeout?
     // 2.2.4 规范 onFulfilled 和 onRejected 只允许在 execution context 栈仅包含平台代码时运行.
     // 注 1 这里的平台代码指的是引擎、环境以及 promise 的实施代码。实践中要确保 onFulfilled 和 onRejected 方法异步执行，且应该在 then 方法被调用的那一轮事件循环之后的新执行栈中执行。
@@ -34,7 +31,7 @@ function Promise(executor) {
         // 只能由 pending 状态 => fulfilled 状态 (避免调用多次 resolve reject)
         self.state = FULFILLED
         self.value = value
-        self.onFulfilledCallbacks.forEach(cb => cb(self.value))
+        self.onFulfilledCallbacks.forEach(cb => cb())
       }
     }, 0)
   }
@@ -44,7 +41,7 @@ function Promise(executor) {
       if (self.state === PENDING) {
         self.state = REJECTED
         self.reason = reason
-        self.onRejectedCallbacks.forEach(cb => cb(self.reason))
+        self.onRejectedCallbacks.forEach(cb => cb())
       }
     }, 0)
   }
@@ -97,6 +94,7 @@ function resolvePromise(promise2, x, resolve, reject) {
       // 2.3.2.3 If/when x is rejected, reject promise with the same reason.
       x.then(resolve, reject)
     }
+    // x.then(resolve, reject)
   } else if (x !== null && (typeof x === 'object' || typeof x === 'function')) { // 2.3.3 Otherwise, if x is an object or function,
     try { // 是否是thenable对象（具有then方法的对象/函数）
       // 2.3.3.1 Let then be x.then.
@@ -214,17 +212,17 @@ Promise.prototype.then = function (onFulfilled, onRejected) {
  */
     return promise2 = new Promise(function (resolve, reject) {
       // 当异步调用 resolve / rejected 时 将 onFulfilled / onRejected 收集暂存到集合中
-      self.onFulfilledCallbacks.push(function (value) {
+      self.onFulfilledCallbacks.push(function () {
         try {
-          var x = onFulfilled(value)
+          var x = onFulfilled(self.value)
           resolvePromise(promise2, x, resolve, reject)
         } catch (err) {
           reject(err)
         }
       })
-      self.onRejectedCallbacks.push(function (reason) {
+      self.onRejectedCallbacks.push(function () {
         try {
-          var x = onRejected(reason)
+          var x = onRejected(self.reason)
           resolvePromise(promise2, x, resolve, reject)
         } catch (err) {
           reject(err)

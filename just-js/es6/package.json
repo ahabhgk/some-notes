@@ -7,6 +7,7 @@
   },
   "scripts": {
     "test:promise-normal": "./node_modules/.bin/promises-aplus-tests promisesaplus.js",
+    "test:promise-event": "./node_modules/.bin/promises-aplus-tests promise-event.js",
     "test:promise-getify": "./node_modules/.bin/promises-aplus-tests promisesaplus-getify.js",
     "test:promise-gyj": "./node_modules/.bin/promises-aplus-tests promisesaplus-gyj.js"
   },
